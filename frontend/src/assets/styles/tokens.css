@@ -1,0 +1,114 @@
+/* Tokens */
+
+:root {
+  /* Superficies */
+  --void: #07050c;
+  --deep: #100a18;
+  --panel: #180f22;
+  --panel-hi: #22162e;
+  --panel-lo: #0d0812;
+
+  /* Tinta */
+  --bone: #ece2f4;
+  --lilac: #b6a1d0;
+  --dust: #7a6b8d;
+  --ash: #493d58;
+
+  /* Acentos */
+  --pink: #ff8fc7;
+  --pink-deep: #c74d8b;
+  --acid: #b6e04a;
+  --ghost: #7fe0dc;
+  --blood: #c2183f;
+  --rot: #6b3f7a;
+
+  /* Semántica */
+  --bg: var(--void);
+  --fg: var(--bone);
+  --fg-soft: var(--lilac);
+  --fg-mute: var(--dust);
+  --line: #33244a;
+  --line-hot: var(--pink-deep);
+  --accent: var(--pink);
+  --accent-2: var(--acid);
+
+  /* Tipografía */
+  --font-pixel: 'DotGothic16', 'MS Gothic', monospace;
+  --font-term: 'VT323', 'Courier New', monospace;
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.9375rem;
+  --fs-md: 1.0625rem;
+  --fs-lg: clamp(1.125rem, 0.9rem + 1.1vw, 1.375rem);
+  --fs-xl: clamp(1.4rem, 1rem + 2vw, 2rem);
+  --fs-2xl: clamp(1.85rem, 1.1rem + 3.6vw, 2.75rem);
+  --tracking: 0.06em;
+  --tracking-wide: 0.22em;
+
+  /* Espaciado */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  --gutter: var(--sp-4);
+
+  --deck-size: 64px;
+
+  /* Carcasa */
+  --chassis: #2a1d38;
+  --chassis-hi: #3a2a4c;
+  --chassis-lo: #180f22;
+  --bevel-hi: rgba(236, 226, 244, 0.16);
+  --bevel-lo: rgba(7, 5, 12, 0.72);
+  --edge-up: inset 2px 2px 0 var(--bevel-hi), inset -2px -2px 0 var(--bevel-lo);
+  --edge-down: inset 2px 2px 0 var(--bevel-lo), inset -2px -2px 0 var(--bevel-hi);
+  --screen-vignette: inset 0 0 60px rgba(7, 5, 12, 0.75);
+
+  /* Bordes */
+  --bd: 2px solid var(--line);
+  --bd-hot: 2px solid var(--line-hot);
+  --shadow-hard: 4px 4px 0 var(--panel-lo);
+  --shadow-glow: 0 0 12px rgba(255, 143, 199, 0.25);
+
+  /* Tiempos */
+  --t-snap: 90ms steps(3, end);
+  --t-soft: 320ms cubic-bezier(0.2, 0.9, 0.3, 1);
+
+  /* Capas */
+  --z-page: 1;
+  --z-nav: 50;
+  --z-pop: 60;
+  --z-overlay: 900;
+  --z-crt: 1000;
+}
+
+:root[data-theme='pale'] {
+  --bg: #efe6f2;
+  --deep: #e3d6ea;
+  --panel: #f6eef8;
+  --panel-hi: #fff;
+  --panel-lo: #cbb9d6;
+  --fg: #2b1b36;
+  --fg-soft: #5c4470;
+  --fg-mute: #8b76a0;
+  --line: #b79fc9;
+  --line-hot: var(--pink-deep);
+
+  --chassis: #d8cbe0;
+  --chassis-hi: #eee5f2;
+  --chassis-lo: #b79fc9;
+  --bevel-hi: rgba(255, 255, 255, 0.8);
+  --bevel-lo: rgba(43, 27, 54, 0.35);
+  --screen-vignette: inset 0 0 60px rgba(43, 27, 54, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-snap: 1ms;
+    --t-soft: 1ms;
+  }
+}
