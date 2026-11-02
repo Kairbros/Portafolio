@@ -1,0 +1,11 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class ProfileImg extends Model
+{
+    protected $table = 'profile_imgs';
+    protected $fillable = ['img_path'];
+}
