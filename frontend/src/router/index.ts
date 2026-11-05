@@ -1,4 +1,6 @@
+import { nextTick } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
+import { begin, end } from '@/composables/useLoader'
 
 import params from '@/views/params/index.vue'
 
@@ -26,6 +28,9 @@ import skill_create from '@/views/params/skills/create.vue'
 
 import typeskill from '@/views/params/typeskill/index.vue'
 import typeskill_create from '@/views/params/typeskill/create.vue'
+
+import stickers from '@/views/params/stickers/index.vue'
+import sticker_create from '@/views/params/stickers/create.vue'
 
 import main_shell from '@/views/main/index.vue'
 import main_home from '@/views/main/home.vue'
@@ -62,9 +67,11 @@ const routes = [
 
       { path: 'projects', name: 'projects', component: project },
       { path: 'projects/create', name: 'project_create', component: project_create },
+      { path: 'projects/:id/edit', name: 'project_edit', component: project_create, props: true },
 
       { path: 'types', name: 'types', component: typeproject },
       { path: 'types/create', name: 'typeproject_create', component: typeproject_create },
+      { path: 'types/:id/edit', name: 'typeproject_edit', component: typeproject_create, props: true },
 
       { path: 'backgrounds', name: 'backgrounds', component: background },
       { path: 'backgrounds/create', name: 'background_create', component: background_create },
@@ -74,12 +81,18 @@ const routes = [
 
       { path: 'musictrack', name: 'music', component: music },
       { path: 'musictrack/create', name: 'music_create', component: music_create },
+      { path: 'musictrack/:id/edit', name: 'music_edit', component: music_create, props: true },
 
       { path: 'skills', name: 'skills', component: skills_params },
       { path: 'skills/create', name: 'skill_create', component: skill_create },
+      { path: 'skills/:id/edit', name: 'skill_edit', component: skill_create, props: true },
 
       { path: 'typeskills', name: 'typeskills', component: typeskill },
       { path: 'typeskills/create', name: 'typeskill_create', component: typeskill_create },
+      { path: 'typeskills/:id/edit', name: 'typeskill_edit', component: typeskill_create, props: true },
+
+      { path: 'stickers', name: 'stickers', component: stickers },
+      { path: 'stickers/create', name: 'sticker_create', component: sticker_create },
     ],
   },
 
@@ -89,6 +102,21 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+})
+
+// la pantalla de carga acompaña cada cambio de ruta
+router.beforeEach(() => {
+  begin()
+})
+
+// se cierra después de montar la página nueva, para que sus pedidos
+// de datos ya estén contados y la carga no se corte a la mitad
+router.afterEach(() => {
+  nextTick(end)
+})
+
+router.onError(() => {
+  end()
 })
 
 export default router

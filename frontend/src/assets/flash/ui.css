@@ -1,0 +1,839 @@
+/* Dream Diary: piezas del escenario */
+
+/* ---------- Escenario ---------- */
+
+.dd-shell {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 24px;
+}
+
+.dd-stage {
+  position: relative;
+  display: grid;
+  grid-template-rows: 56px minmax(0, 1fr);
+  width: var(--dd-stage-w);
+  height: var(--dd-stage-h);
+  overflow: hidden;
+  background: var(--dd-stage);
+  border: 1px solid var(--dd-frame);
+  box-shadow: 0 0 0 4px var(--dd-void), 0 0 0 5px var(--dd-line);
+  opacity: 0.72;
+  transition: opacity 320ms ease;
+}
+
+/* sin el mouse encima se aclara para dejar ver el fondo */
+.dd-stage:hover,
+.dd-stage:focus-within {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .dd-stage {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dd-stage {
+    transition: none;
+  }
+}
+
+.dd-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--dd-line);
+}
+
+.dd-brand {
+  font-family: var(--dd-pixel);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--dd-bone);
+}
+
+.dd-brand__mode {
+  font-size: 12px;
+  color: var(--dd-dust);
+}
+
+.dd-body {
+  display: grid;
+  grid-template-columns: var(--dd-nav-w) minmax(0, 1fr);
+  min-height: 0;
+}
+
+.dd-nav {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 28px 20px 24px;
+  border-right: 1px solid var(--dd-line);
+}
+
+.dd-nav__list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: var(--dd-pixel);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.dd-nav__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--tone);
+}
+
+.dd-nav__link:hover {
+  color: var(--tone);
+}
+
+.dd-nav__link--plain:not(.is-active) {
+  color: var(--dd-lilac);
+}
+
+.dd-nav__mark {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  background: var(--tone);
+  opacity: 0;
+}
+
+.dd-nav__link:hover .dd-nav__mark,
+.dd-nav__link:focus-visible .dd-nav__mark,
+.dd-nav__link.is-active .dd-nav__mark {
+  opacity: 1;
+}
+
+.dd-nav__closed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--dd-line);
+  color: var(--dd-closed);
+  cursor: not-allowed;
+}
+
+.dd-nav__closed::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+}
+
+.dd-main {
+  position: relative;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+
+/* enlaces de afuera, al pie de la columna: chicos y grises para no competir con las secciones */
+.dd-nav__out {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 14px;
+  padding-left: 16px;
+  border-top: 1px solid var(--dd-line);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.dd-nav__out a,
+.dd-nav__out-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dd-dust);
+}
+
+.dd-nav__icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.dd-nav__out a:hover,
+.dd-nav__out a:focus-visible,
+.dd-nav__out-btn:hover,
+.dd-nav__out-btn:focus-visible {
+  color: var(--dd-bone);
+}
+
+/* lápiz solo, con área de toque cómoda */
+.dd-nav__out .dd-nav__edit {
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 6px 0 0 -7px;
+  color: var(--dd-dust);
+}
+
+.dd-nav__out .dd-nav__edit .dd-nav__icon {
+  width: 16px;
+  height: 16px;
+}
+
+.dd-nav__out .dd-nav__edit:hover,
+.dd-nav__out .dd-nav__edit:focus-visible {
+  color: var(--dd-lilac);
+}
+
+/* ---------- Ventanas ---------- */
+
+.dd-win {
+  min-width: 0;
+  border: 1px solid var(--dd-frame);
+}
+
+.dd-win__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 22px;
+  padding: 0 8px;
+  overflow: hidden;
+  background: var(--dd-bar);
+  border-bottom: 1px solid var(--dd-frame);
+  font-family: var(--dd-pixel);
+  font-size: 10px;
+  color: var(--dd-lilac);
+  white-space: nowrap;
+}
+
+.dd-win__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dd-scan {
+  background: repeating-linear-gradient(0deg, #1a1124 0 2px, #140d1d 2px 4px);
+}
+
+/* ---------- Letra ---------- */
+
+.dd-title {
+  font-family: var(--dd-pixel);
+  font-size: 26px;
+  line-height: 1.2;
+  color: var(--dd-tone);
+  overflow-wrap: anywhere;
+}
+
+.dd-lead {
+  color: var(--dd-lilac);
+  max-width: 48ch;
+}
+
+.dd-prose {
+  display: grid;
+  gap: 10px;
+  max-width: 50ch;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--dd-lilac);
+}
+
+.dd-prose > :first-child {
+  color: var(--dd-bone);
+}
+
+.dd-small {
+  font-size: 12px;
+  color: var(--dd-dust);
+}
+
+.dd-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-bottom: 18px;
+}
+
+.dd-back {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-family: var(--dd-pixel);
+  font-size: 11px;
+}
+
+/* ---------- Botones y pestañas ---------- */
+
+.dd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 12px;
+  font-family: var(--dd-pixel);
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--dd-lilac);
+  border: 1px solid var(--dd-line);
+}
+
+.dd-btn:hover,
+.dd-btn:focus-visible {
+  color: var(--dd-void);
+  background: var(--dd-tone);
+  border-color: var(--dd-tone);
+}
+
+.dd-btn--tone {
+  color: var(--dd-tone);
+  border-color: var(--dd-tone);
+}
+
+.dd-btn--big {
+  min-height: 40px;
+  padding: 0 32px;
+  font-size: 16px;
+  color: var(--dd-bone);
+  background: var(--dd-stage);
+  border-color: var(--dd-bone);
+}
+
+.dd-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dd-tab {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  font-family: var(--dd-pixel);
+  font-size: 11px;
+  color: var(--dd-lilac);
+  border: 1px solid var(--dd-line);
+}
+
+.dd-tab:hover {
+  color: var(--dd-tone);
+}
+
+.dd-tab.is-active {
+  color: var(--dd-tone);
+  border-color: var(--dd-tone);
+}
+
+/* ---------- Cuadrícula de proyectos ---------- */
+
+.dd-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dd-card {
+  display: block;
+  color: var(--dd-bone);
+  border: 1px solid var(--dd-frame);
+}
+
+.dd-card:hover,
+.dd-card:focus-visible {
+  color: var(--dd-tone);
+  border-color: var(--dd-tone);
+}
+
+.dd-card__shot {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  font-family: var(--dd-pixel);
+  font-size: 12px;
+  color: var(--dd-dust);
+}
+
+.dd-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dd-card__name {
+  display: block;
+  padding: 6px 10px;
+  overflow: hidden;
+  border-top: 1px solid var(--dd-line);
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Estados ---------- */
+
+.dd-state {
+  display: grid;
+  gap: 4px;
+  padding: 24px 0;
+  font-family: var(--dd-pixel);
+  font-size: 12px;
+  color: var(--dd-dust);
+}
+
+.dd-state--bad {
+  color: var(--dd-closed);
+}
+
+.dd-state__detail {
+  font-family: var(--dd-text);
+  color: var(--dd-dust);
+}
+
+/* ---------- Pantalla de carga ---------- */
+
+.dd-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  background: #0a0710;
+}
+
+.dd-loader__name {
+  font-family: var(--dd-pixel);
+  font-size: 20px;
+  color: var(--dd-lilac);
+}
+
+.dd-loader__meter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.dd-loader__bar {
+  width: min(320px, 70vw);
+  height: 12px;
+  padding: 2px;
+  border: 1px solid var(--dd-frame);
+}
+
+.dd-loader__fill {
+  height: 100%;
+  background: repeating-linear-gradient(90deg, var(--dd-lilac) 0 6px, transparent 6px 8px);
+}
+
+.dd-loader__label {
+  font-family: var(--dd-pixel);
+  font-size: 12px;
+  color: var(--dd-dust);
+}
+
+/* ---------- Sonido ---------- */
+
+.dd-sound {
+  position: relative;
+}
+
+.dd-sound__trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  padding: 0 12px;
+  font-family: var(--dd-pixel);
+  font-size: 11px;
+  color: var(--dd-lilac);
+  border: 1px solid var(--dd-line);
+}
+
+.dd-sound__trigger:hover,
+.dd-sound__trigger[aria-expanded='true'] {
+  color: var(--dd-bone);
+  border-color: var(--dd-frame);
+}
+
+.dd-sound__icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.dd-sound__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  width: 240px;
+  background: var(--dd-stage);
+}
+
+.dd-sound__rows {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px 10px;
+}
+
+.dd-sound__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  font-size: 14px;
+}
+
+.dd-switch {
+  min-width: 52px;
+  height: 28px;
+  padding: 0 8px;
+  font-family: var(--dd-pixel);
+  font-size: 10px;
+  color: var(--dd-lilac);
+  border: 1px solid var(--dd-line);
+}
+
+.dd-switch[aria-pressed='true'] {
+  color: var(--dd-void);
+  background: var(--dd-lilac);
+  border-color: var(--dd-lilac);
+}
+
+.dd-range {
+  width: 100%;
+  height: 8px;
+  padding: 0;
+  background: linear-gradient(90deg, var(--dd-lilac) 0 var(--fill, 50%), var(--dd-line) var(--fill, 50%));
+  border: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.dd-range::-webkit-slider-thumb {
+  width: 10px;
+  height: 16px;
+  background: var(--dd-bone);
+  border: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dd-range::-moz-range-thumb {
+  width: 10px;
+  height: 16px;
+  background: var(--dd-bone);
+  border: 0;
+  border-radius: 0;
+}
+
+.dd-range:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------- Qué está sonando ---------- */
+
+.dd-np {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 40;
+  width: 260px;
+  background: var(--dd-stage);
+}
+
+.dd-np__body {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+}
+
+.dd-np__art {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}
+
+.dd-np__text {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.dd-np__text p {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.dd-np__artist {
+  color: var(--dd-dust);
+}
+
+.dd-fade-enter-active,
+.dd-fade-leave-active {
+  transition: opacity 150ms;
+}
+
+.dd-fade-enter-from,
+.dd-fade-leave-to {
+  opacity: 0;
+}
+
+/* ---------- Ventana encima de todo ---------- */
+
+.dd-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(7, 5, 12, 0.9);
+}
+
+.dd-modal__win {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  max-width: 100%;
+  max-height: calc(100dvh - 48px);
+  background: var(--dd-stage);
+}
+
+.dd-modal__win--wide {
+  width: min(1200px, 100%);
+}
+
+.dd-modal__win .dd-win__bar {
+  height: 32px;
+}
+
+.dd-modal__action {
+  padding: 4px 8px;
+  font-family: var(--dd-pixel);
+  font-size: 10px;
+  color: var(--dd-lilac);
+  border: 1px solid var(--dd-line);
+}
+
+.dd-modal__action:hover,
+.dd-modal__action:focus-visible {
+  color: var(--dd-bone);
+  border-color: var(--dd-frame);
+}
+
+.dd-modal__img {
+  max-width: 100%;
+  max-height: calc(100dvh - 90px);
+  margin-inline: auto;
+  object-fit: contain;
+}
+
+.dd-modal__board {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100dvh - 90px);
+  background: #000;
+}
+
+/* ---------- Reproductor de juegos ---------- */
+
+.dd-player {
+  display: grid;
+  gap: 8px;
+}
+
+.dd-player__screen {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+.dd-player__poster,
+.dd-player__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.dd-player__poster {
+  object-fit: cover;
+  opacity: 0.55;
+}
+
+.dd-player__frame {
+  border: 0;
+  background: #000;
+}
+
+.dd-player__cover {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+}
+
+.dd-player__booting {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--dd-pixel);
+  font-size: 12px;
+  color: var(--dd-dust);
+  pointer-events: none;
+}
+
+.dd-player__hud {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0 8px 8px;
+}
+
+/* ---------- Pantallas chicas ---------- */
+
+@media (max-width: 1010px), (max-height: 640px) {
+  .dd-shell {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .dd-stage {
+    width: 100%;
+    height: 100dvh;
+    border: 0;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .dd-stage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 56px auto minmax(0, 1fr);
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .dd-head {
+    padding: 0 16px;
+  }
+
+  .dd-brand {
+    font-size: 18px;
+  }
+
+  .dd-body {
+    display: contents;
+  }
+
+  .dd-nav {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+    padding: 0 16px;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--dd-line);
+    scrollbar-width: none;
+  }
+
+  .dd-nav__list {
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    height: 44px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .dd-nav__mark {
+    width: 5px;
+    height: 5px;
+  }
+
+  .dd-nav__link:not(.is-active) .dd-nav__mark {
+    display: none;
+  }
+
+  .dd-nav__closed {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .dd-nav__closed::before {
+    display: none;
+  }
+
+  .dd-main {
+    overflow: visible;
+    padding: 20px 16px;
+  }
+
+  .dd-nav__out {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    padding: 0 0 0 20px;
+    border-top: 0;
+    border-left: 1px solid var(--dd-line);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .dd-nav__out .dd-nav__edit {
+    margin-top: 0;
+  }
+
+  .dd-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .dd-np {
+    right: 8px;
+    bottom: 8px;
+    width: min(260px, calc(100vw - 16px));
+  }
+}
+
+@media (max-width: 420px) {
+  .dd-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dd-fade-enter-active,
+  .dd-fade-leave-active {
+    transition: none;
+  }
+}

@@ -1,30 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import NoSignal from '@/components/ui/NoSignal.vue'
-import { useProfileImgStore } from '@/stores/Store'
+import { useProfileImgStore, useProjectStore } from '@/stores/Store'
 import { useImageRotator } from '@/composables/useImageRotator'
+import { track } from '@/composables/useLoader'
 import { fileUrl } from '@/utils/media'
-import IconGithub from '~icons/simple-icons/github'
-import IconItch from '~icons/simple-icons/itchdotio'
-import GearIcon from '~icons/mdi/gear'
-import BrushFillIcon from '~icons/ri/brush-fill'
-import GhostBoldIcon from '~icons/solar/ghost-bold'
-
-const entries = [
-    { icon: BrushFillIcon, name: 'proyectos', note: 'Mira mis proyectos', to: '/projects' },
-    { icon: GearIcon, name: 'parametros', note: 'Añade recuerdos', to: '/params' },
-    { icon: GhostBoldIcon, name: '???', note: 'Próximamente', to: null },
-]
-
-const links = [
-    { icon: IconGithub, name: 'github', note: 'github.com/Kairbros', href: 'https://github.com/Kairbros' },
-    { icon: IconItch, name: 'itch.io', note: 'just-kvin.itch.io', href: 'https://just-kvin.itch.io/' },
-]
+import { projectTypeId } from '@/utils/project'
 
 const PORTRAIT_MS = 15_000
+const LATEST = 5
 
 const profileStore = useProfileImgStore()
+const projectStore = useProjectStore()
 
 const portraits = computed(() =>
     (profileStore.profileImgs ?? []).map((item) => fileUrl(item.img_path)).filter(Boolean),
@@ -32,134 +19,183 @@ const portraits = computed(() =>
 
 const { layers: portraitLayers, active: portraitActive } = useImageRotator(portraits, PORTRAIT_MS, 'portrait')
 
-onMounted(() => profileStore.ensureProfileImgs())
+const latest = computed(() =>
+    [...(projectStore.projects ?? [])]
+        .sort((a, b) => String(b.created_at ?? '').localeCompare(String(a.created_at ?? '')))
+        .slice(0, LATEST),
+)
+
+const dateFormat = new Intl.DateTimeFormat('es', { day: '2-digit', month: '2-digit', year: 'numeric' })
+
+function shortDate(raw: string | null | undefined) {
+    const date = new Date(raw ?? '')
+    return Number.isNaN(date.getTime()) ? '' : dateFormat.format(date)
+}
+
+onMounted(() => {
+    track(profileStore.ensureProfileImgs())
+    track(projectStore.ensureProjects())
+})
 </script>
 
 <template>
-    <div class="view home">
-        <section class="panel">
-            <header class="panel__head"></header>
-
-            <div class="panel__body intro">
-                <div class="portrait">
-                    <NoSignal />
-
-                    <div
-                        v-for="(url, index) in portraitLayers"
-                        :key="index"
-                        class="portrait__layer"
-                        :class="{ 'portrait__layer--on': index === portraitActive && url }"
-                        :style="url ? { backgroundImage: `url('${url}')` } : null"
-                    ></div>
-                </div>
-
-                <div class="intro__text">
-                    <h1 class="t-title fx-glitch" data-text="portfolio">Dream Diary</h1>
-                    <p class="t-soft fx-caret">Me gusta jugar</p>
-                </div>
+    <div class="home">
+        <section class="dd-win home__portrait" aria-label="Retrato">
+            <div class="dd-win__bar">retrato</div>
+            <div class="home__frame dd-scan">
+                <div
+                    v-for="(url, index) in portraitLayers"
+                    :key="index"
+                    class="home__layer"
+                    :class="{ 'home__layer--on': index === portraitActive && url }"
+                    :style="url ? { backgroundImage: `url('${url}')` } : undefined"
+                ></div>
             </div>
         </section>
 
-        <section class="panel home__folders">
-            <header class="panel__head"></header>
+        <div class="home__side">
+            <div class="home__intro">
+                <h1 class="dd-title">me gusta jugar</h1>
+                <p class="dd-lead">Dibujo, escribo historias y hago videojuegos. Aquí guardo lo que voy terminando.</p>
+            </div>
 
-            <ul class="listing">
-                <li v-for="entry in entries" :key="entry.name">
-                    <component
-                        :is="entry.to ? RouterLink : 'div'"
-                        :to="entry.to ?? undefined"
-                        class="row"
-                        :class="{ 'row--locked': !entry.to }"
-                    >
-                        <span class="row__icon" aria-hidden="true">
-                            <component :is="entry.icon" />
-                        </span>
-                        <span class="row__name">{{ entry.name }}</span>
-                        <span class="row__note">{{ entry.note }}</span>
-                    </component>
-                </li>
-            </ul>
-        </section>
+            <section class="dd-win" aria-label="Novedades">
+                <div class="dd-win__bar">novedades</div>
 
-        <section class="panel">
-            <header class="panel__head"></header>
+                <p v-if="projectStore.error" class="dd-state dd-state--bad home__state">
+                    no se pudo leer
+                    <span class="dd-state__detail">{{ projectStore.error }}</span>
+                </p>
 
-            <ul class="listing">
-                <li v-for="link in links" :key="link.name">
-                    <a class="row" :href="link.href" target="_blank" rel="noopener noreferrer">
-                        <span class="row__icon" aria-hidden="true">
-                            <component :is="link.icon" />
-                        </span>
-                        <span class="row__name">{{ link.name }}</span>
-                        <span class="row__note">{{ link.note }}</span>
-                    </a>
-                </li>
-            </ul>
-        </section>
+                <ul v-else-if="latest.length" class="home__news">
+                    <li v-for="project in latest" :key="project.id">
+                        <RouterLink
+                            class="home__row"
+                            :to="{ name: 'project_open', params: { typeId: projectTypeId(project), id: project.id } }"
+                        >
+                            <span class="home__date">{{ shortDate(project.created_at) }}</span>
+                            <span class="home__name">{{ project.name }}</span>
+                            <span class="home__type">{{ project.type?.name }}</span>
+                        </RouterLink>
+                    </li>
+                </ul>
+
+                <p v-else-if="projectStore.loaded" class="dd-state home__state">todavía no hay nada</p>
+            </section>
+        </div>
     </div>
 </template>
 
 <style scoped>
 .home {
-    grid-template-rows: auto 1fr auto;
-}
-
-.home__folders .listing {
-    flex: 1;
-}
-
-.intro {
     display: grid;
-    grid-template-columns: 148px minmax(0, 1fr);
-    align-items: center;
-    gap: var(--sp-8);
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
 }
 
-.intro__text {
-    display: grid;
-    gap: var(--sp-3);
-}
-
-.portrait {
+.home__frame {
     position: relative;
-    display: grid;
-    place-items: center;
     aspect-ratio: 1;
-    overflow: hidden;
-    background: var(--panel-lo);
-    border: 2px solid var(--pink-deep);
-    box-shadow: var(--shadow-hard);
 }
 
-.portrait__layer {
+.home__layer {
     position: absolute;
     inset: 0;
-    z-index: 1;
     background-position: center;
     background-size: cover;
     opacity: 0;
-    transition: opacity 1.25s ease-in-out;
+    transition: opacity 1.2s ease-in-out;
 }
 
-.portrait__layer--on {
+.home__layer--on {
     opacity: 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .portrait__layer {
-        transition: none;
+.home__side {
+    display: grid;
+    gap: 24px;
+    min-width: 0;
+}
+
+.home__intro {
+    display: grid;
+    gap: 8px;
+}
+
+.home__news {
+    padding: 4px 0;
+    font-size: 14px;
+}
+
+.home__row {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 8px 12px;
+    color: var(--dd-bone);
+}
+
+.home__row:hover,
+.home__row:focus-visible {
+    color: var(--dd-bone);
+    background: var(--dd-hover);
+}
+
+.home__date {
+    color: var(--dd-dust);
+}
+
+.home__name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.home__type {
+    color: var(--dd-projects);
+}
+
+.home__state {
+    padding: 12px;
+}
+
+@media (max-width: 720px) {
+    .home {
+        grid-template-columns: 112px minmax(0, 1fr);
+        gap: 20px 16px;
+    }
+
+    .home__portrait {
+        align-self: center;
+    }
+
+    .home__side {
+        display: contents;
+    }
+
+    .home__intro .dd-title {
+        font-size: 20px;
+    }
+
+    .home__side > .dd-win {
+        grid-column: 1 / -1;
+    }
+
+    .home__row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        row-gap: 0;
+    }
+
+    .home__date {
+        grid-row: 2;
+        font-size: 12px;
     }
 }
 
-@media (max-width: 560px) {
-    .intro {
-        grid-template-columns: 1fr;
-        justify-items: start;
-        gap: var(--sp-6);
-    }
-
-    .portrait {
-        width: 120px;
+@media (prefers-reduced-motion: reduce) {
+    .home__layer {
+        transition: none;
     }
 }
 </style>

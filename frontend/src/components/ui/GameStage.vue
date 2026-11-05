@@ -78,92 +78,76 @@ onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown)
   document.body.style.overflow = ''
 })
+
+defineExpose({ openTheater })
 </script>
 
 <template>
-  <div ref="board" class="stage" :class="{ 'stage--live': playing }">
-    <div v-if="!playing" class="stage__attract">
-      <img v-if="poster" class="stage__poster" :src="poster" :alt="title" loading="lazy">
+  <div class="dd-player">
+    <div ref="board" class="dd-player__screen dd-scan">
+      <template v-if="!playing">
+        <img v-if="poster" class="dd-player__poster" :src="poster" alt="" loading="lazy">
 
-      <span v-else class="no-signal" aria-hidden="true">
-        <span class="no-signal__bars"></span>
-        <span class="no-signal__sweep"></span>
-      </span>
+        <div class="dd-player__cover">
+          <button type="button" class="dd-btn dd-btn--big" @click="play">jugar</button>
+        </div>
+      </template>
 
-      <span class="stage__scan" aria-hidden="true"></span>
+      <template v-else>
+        <iframe
+          :key="run"
+          ref="frame"
+          class="dd-player__frame"
+          :src="src"
+          :title="title"
+          allow="autoplay; fullscreen; gamepad; cross-origin-isolated"
+          allowfullscreen
+          @load="ready = true"
+        />
 
-      <div class="stage__pitch">
+        <p v-if="!ready" class="dd-player__booting">cargando</p>
+      </template>
+    </div>
 
-        <button type="button" class="stage__play" @click="play">
-          <span class="stage__play-glyph" aria-hidden="true">▶</span>
-          <span class="stage__play-text">jugar</span>
-        </button>
+    <div v-if="playing" class="dd-player__hud">
+      <button type="button" class="dd-btn" @click="fullscreen">pantalla completa</button>
+      <button type="button" class="dd-btn" @click="restart">reiniciar</button>
+      <button type="button" class="dd-btn" @click="stop">salir</button>
+    </div>
+  </div>
 
-        <div class="stage__side">
-          <button type="button" class="btn btn--ghost stage__alt" @click="openTheater">
-            abrir en una ventana grande
-          </button>
+  <Teleport to="body">
+    <div
+      v-if="theater"
+      class="dd-modal"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="title"
+      @click.self="stop"
+    >
+      <div class="dd-win dd-modal__win dd-modal__win--wide">
+        <div class="dd-win__bar">
+          <span class="dd-win__title">{{ title }}</span>
+          <button type="button" class="dd-modal__action" @click="fullscreen">pantalla completa</button>
+          <button type="button" class="dd-modal__action" @click="restart">reiniciar</button>
+          <button type="button" class="dd-modal__action" @click="stop">cerrar</button>
+        </div>
+
+        <div ref="theaterBoard" class="dd-modal__board">
+          <iframe
+            :key="run"
+            ref="theaterFrame"
+            class="dd-player__frame"
+            :src="src"
+            :title="title"
+            allow="autoplay; fullscreen; gamepad; cross-origin-isolated"
+            allowfullscreen
+            @load="ready = true"
+          />
+
+          <p v-if="!ready" class="dd-player__booting">cargando</p>
         </div>
       </div>
     </div>
-
-    <template v-else>
-      <iframe
-        :key="run"
-        ref="frame"
-        class="stage__frame"
-        :src="src"
-        :title="title"
-        allow="autoplay; fullscreen; gamepad; cross-origin-isolated"
-        allowfullscreen
-        @load="ready = true"
-      />
-
-      <p v-if="!ready" class="stage__booting loading-dots">cargando</p>
-
-      <div class="stage__hud">
-        <button type="button" class="stage__key" @click="fullscreen">pantalla completa</button>
-        <button type="button" class="stage__key" @click="openTheater">ventana grande</button>
-        <button type="button" class="stage__key" @click="restart">reiniciar</button>
-        <button type="button" class="stage__key stage__key--off" @click="stop">salir</button>
-      </div>
-    </template>
-  </div>
-  <Teleport to="body">
-    <Transition name="lb">
-      <div
-        v-if="theater"
-        class="lightbox theater"
-        role="dialog"
-        aria-modal="true"
-        :aria-label="title"
-        @click.self="stop"
-      >
-        <div class="lightbox__window theater__window">
-          <div class="lightbox__bar">
-            <span class="lightbox__title">{{ title }}</span>
-
-            <button type="button" class="stage__key" @click="fullscreen">pantalla completa</button>
-            <button type="button" class="stage__key" @click="restart">reiniciar</button>
-            <button type="button" class="lightbox__close" aria-label="cerrar" @click="stop">✕</button>
-          </div>
-
-          <div ref="theaterBoard" class="theater__board">
-            <iframe
-              :key="run"
-              ref="theaterFrame"
-              class="stage__frame"
-              :src="src"
-              :title="title"
-              allow="autoplay; fullscreen; gamepad; cross-origin-isolated"
-              allowfullscreen
-              @load="ready = true"
-            />
-
-            <p v-if="!ready" class="stage__booting loading-dots">cargando</p>
-          </div>
-        </div>
-      </div>
-    </Transition>
   </Teleport>
 </template>

@@ -1,0 +1,35 @@
+/* Dream Diary: tokens del escenario */
+
+:root {
+  /* Fondo y escenario */
+  --dd-void: #07050c;
+  --dd-tile: #0c0812;
+  --dd-stage: #120c1a;
+  --dd-well: #0d0913;
+  --dd-bar: #1d1429;
+  --dd-hover: #1a1225;
+  --dd-line: #2e2140;
+  --dd-frame: #4a3a5e;
+
+  /* Tinta */
+  --dd-bone: #ece2f4;
+  --dd-lilac: #b6a1d0;
+  --dd-dust: #8a7b9d;
+
+  /* Tono de cada sección */
+  --dd-home: #ece2f4;
+  --dd-projects: #e07bb5;
+  --dd-about: #b4a7e6;
+  --dd-skills: #8f7cf0;
+  --dd-closed: #b8336a;
+  --dd-tone: var(--dd-home);
+
+  /* Letra */
+  --dd-pixel: 'Silkscreen', 'DotGothic16', monospace;
+  --dd-text: 'DotGothic16', monospace;
+
+  /* Escenario */
+  --dd-stage-w: 960px;
+  --dd-stage-h: 600px;
+  --dd-nav-w: 168px;
+}

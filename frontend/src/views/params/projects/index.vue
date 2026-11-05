@@ -1,106 +1,76 @@
 <script setup>
-import { useProjectStore } from '@/stores/Store';
-import { computed, onMounted, ref } from 'vue';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
+import { computed, onMounted, ref } from 'vue'
+import { useProjectStore } from '@/stores/Store'
+import { track } from '@/composables/useLoader'
+import { coverUrl } from '@/utils/media'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import PencilIcon from '~icons/pixelarticons/pencil'
 
-const project_store = useProjectStore()
-const loading = ref(false)
+const store = useProjectStore()
 
 const pending = ref(null)
 const deleting = ref(false)
 const notice = ref('')
 
+const projects = computed(() => store.projects ?? [])
+
 async function remove() {
     if (!pending.value) return
 
     deleting.value = true
-    const res = await project_store.deleteProject(pending.value.id)
+    const res = await store.deleteProject(pending.value.id)
     deleting.value = false
 
-    notice.value = res.ok ? 'proyecto eliminado' : res.message
+    notice.value = res.ok ? 'borrado' : res.message
     pending.value = null
 
-    if (res.ok) await project_store.getProjects()
+    if (res.ok) await track(store.getProjects())
 }
 
-const projects = computed(() => project_store.projects ?? [])
-
-function typeName(project) {
-    return typeof project.type === 'object' && project.type !== null
-        ? project.type.name
-        : project.type
-}
-
-onMounted(async () => {
-    loading.value = true
-    await project_store.getProjects()
-    loading.value = false
-})
+onMounted(() => track(store.getProjects()))
 </script>
 
 <template>
-    <div class="view">
-        <section class="panel">
-            <header class="panel__head"></header>
+    <div>
+        <div class="dd-heading">
+            <h1 class="dd-title">proyectos</h1>
+            <RouterLink class="dd-btn dd-btn--tone" :to="{ name: 'project_create' }">nuevo</RouterLink>
+        </div>
 
-            <div class="panel__body archive__head">
-                <h1 class="t-title fx-glitch" data-text="proyectos">Proyectos</h1>
-                <RouterLink class="btn btn--primary" :to="{ name: 'project_create' }">
-                    nuevo
-                </RouterLink>
-            </div>
+        <p v-if="store.error" class="dd-state dd-state--bad">
+            no se pudo leer
+            <span class="dd-state__detail">{{ store.error }}</span>
+        </p>
+
+        <section v-else-if="projects.length" class="dd-win">
+            <div class="dd-win__bar">{{ projects.length }} en total</div>
+            <ul class="dd-rows">
+                <li v-for="project in projects" :key="project.id" class="dd-row">
+                    <img v-if="coverUrl(project)" class="dd-row__thumb" :src="coverUrl(project)" alt="" loading="lazy">
+                    <span v-else class="dd-row__thumb dd-scan" aria-hidden="true"></span>
+
+                    <div class="dd-row__text">
+                        <span class="dd-row__name">{{ project.name }}</span>
+                        <span class="dd-row__meta">{{ project.type?.name ?? 'sin tipo' }}</span>
+                    </div>
+
+                    <div class="dd-row__actions">
+                        <RouterLink class="dd-row__edit" :to="{ name: 'project_edit', params: { id: project.id } }" aria-label="Editar" title="editar">
+                            <PencilIcon aria-hidden="true" />
+                        </RouterLink>
+                        <button type="button" class="dd-link-btn" @click="pending = project">borrar</button>
+                    </div>
+                </li>
+            </ul>
         </section>
 
-        <div v-if="loading" class="state">
-            <p class="state__glyph fx-flicker">✦</p>
-            <p class="loading-dots">cargando</p>
-        </div>
+        <p v-else-if="store.loaded" class="dd-state">vacío</p>
 
-        <div v-else-if="project_store.error" class="state state--bad">
-            <p class="state__glyph">✕</p>
-            <p>no se pudo leer el archivo</p>
-            <p class="t-mute">{{ project_store.error }}</p>
-        </div>
-
-        <ul v-else-if="projects.length" class="entry-list">
-            <li v-for="project in projects" :key="project.id">
-                <article class="entry">
-                    <div class="entry__text">
-                        <h2 class="entry__name">{{ project.name }}</h2>
-                        <p class="entry__desc t-mute">
-                            {{ project.description || 'sin descripción' }}
-                        </p>
-                        <div class="entry__meta">
-                            <span class="tag" :data-type="typeName(project)">
-                                {{ typeName(project) }}
-                            </span>
-                            <span v-if="project.folder" class="entry__file">
-                                {{ project.folder }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="entry__actions">
-                        <button class="btn btn--danger" type="button" @click="pending = project">
-                            borrar
-                        </button>
-                    </div>
-                </article>
-            </li>
-        </ul>
-
-        <div v-else class="state">
-            <p class="state__glyph">◌</p>
-            <p>el cuarto está vacío</p>
-            <p class="t-mute">nada guardado todavía.</p>
-        </div>
-
-        <p v-if="notice" class="notice view__tail" role="status">▸ {{ notice }}</p>
+        <p v-if="notice" class="dd-notice" role="status">{{ notice }}</p>
 
         <ConfirmDialog
             :model-value="!!pending"
-            title="eliminar proyecto"
-            message="Se borrará el registro y su archivo del servidor."
+            title="borrar proyecto"
             :target="pending?.name ?? ''"
             :busy="deleting"
             @update:model-value="pending = null"
@@ -108,46 +78,3 @@ onMounted(async () => {
         />
     </div>
 </template>
-
-<style scoped>
-.entry {
-    grid-template-columns: minmax(0, 1fr) auto;
-}
-
-.entry__text {
-    display: grid;
-    gap: var(--sp-1);
-    min-width: 0;
-}
-
-.entry__desc {
-    overflow-wrap: anywhere;
-}
-
-.entry__file {
-    min-width: 0;
-    font-family: var(--font-term);
-    font-size: var(--fs-xs);
-    color: var(--ash);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.entry__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-2);
-}
-
-@media (max-width: 560px) {
-    .entry {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .entry .btn {
-        grid-column: 1 / -1;
-        justify-content: center;
-    }
-}
-</style>

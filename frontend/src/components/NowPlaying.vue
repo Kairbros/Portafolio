@@ -11,26 +11,22 @@ const artwork = computed(() =>
 </script>
 
 <template>
-    <Transition name="tape">
+    <Transition name="dd-fade">
         <aside
             v-if="announcing && current && !muted"
-            class="tape"
+            class="dd-win dd-np"
             role="status"
             aria-live="polite"
         >
-            <header class="tape__head">
-                <span class="tape__eq" aria-hidden="true"><i></i><i></i><i></i></span>
-            </header>
+            <div class="dd-win__bar">sonando</div>
 
-            <div class="tape__body">
-                <div class="tape__art">
-                    <img v-if="artwork" class="tape__img" :src="artwork" alt="" />
-                    <span v-else class="tape__art-empty" aria-hidden="true">♪</span>
-                </div>
+            <div class="dd-np__body">
+                <img v-if="artwork" class="dd-np__art" :src="artwork" alt="" />
+                <span v-else class="dd-np__art dd-scan" aria-hidden="true"></span>
 
-                <div class="tape__text">
-                    <p class="tape__title">{{ current.title || 'sin título' }}</p>
-                    <p class="tape__artist">{{ current.artist || 'artista desconocido' }}</p>
+                <div class="dd-np__text">
+                    <p>{{ current.title || 'sin título' }}</p>
+                    <p class="dd-np__artist">{{ current.artist || 'artista desconocido' }}</p>
                 </div>
             </div>
         </aside>

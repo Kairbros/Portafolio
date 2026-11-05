@@ -1,20 +1,35 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useMusicStore } from '@/stores/Store'
-import router from '@/router'
+import { track } from '@/composables/useLoader'
+import { fileUrl } from '@/utils/media'
 
+const props = defineProps<{ id?: string }>()
+
+const router = useRouter()
 const store = useMusicStore()
 
 const title = ref('')
 const artist = ref('')
-
 const music = ref<File | null>(null)
 const musicPreview = ref('')
-
 const artwork = ref<File | null>(null)
 const artPreview = ref('')
 const size = ref({ width: 0, height: 0 })
 const isSquare = ref(true)
+const currentArt = ref('')
+const currentAudio = ref('')
+const missing = ref(false)
+
+const shownArt = computed(() => artPreview.value || currentArt.value)
+const shownAudio = computed(() => musicPreview.value || currentAudio.value)
+const ready = computed(() =>
+    isSquare.value
+    && !!title.value.trim()
+    && !!artist.value.trim()
+    && (!!props.id || (!!music.value && !!artwork.value)),
+)
 
 const sending = ref(false)
 const message = ref('')
@@ -26,27 +41,22 @@ function revoke(url: string) {
 }
 
 function onMusicChange(event: Event) {
-    const picked = (event.target as HTMLInputElement).files?.[0] ?? null
-
     revoke(musicPreview.value)
-    music.value = picked
-    musicPreview.value = picked ? URL.createObjectURL(picked) : ''
+    music.value = (event.target as HTMLInputElement).files?.[0] ?? null
+    musicPreview.value = music.value ? URL.createObjectURL(music.value) : ''
 }
 
 function onArtworkChange(event: Event) {
-    const picked = (event.target as HTMLInputElement).files?.[0] ?? null
-
     revoke(artPreview.value)
-    artwork.value = picked
-    size.value = { width: 0, height: 0 }
+    artwork.value = (event.target as HTMLInputElement).files?.[0] ?? null
     isSquare.value = true
 
-    if (!picked) {
+    if (!artwork.value) {
         artPreview.value = ''
         return
     }
 
-    artPreview.value = URL.createObjectURL(picked)
+    artPreview.value = URL.createObjectURL(artwork.value)
 
     const probe = new Image()
     probe.onload = () => {
@@ -56,24 +66,40 @@ function onArtworkChange(event: Event) {
     probe.src = artPreview.value
 }
 
+onMounted(async () => {
+    if (!props.id) return
+    await track(store.ensureMusicTracks())
+    const item = store.musicTracks.find((t: any) => String(t.id) === props.id)
+    if (!item) {
+        missing.value = true
+        return
+    }
+    title.value = item.title ?? ''
+    artist.value = item.artist ?? ''
+    currentArt.value = item.artwork_path ? fileUrl(item.artwork_path) : ''
+    currentAudio.value = item.path ? fileUrl(item.path) : ''
+})
+
 onBeforeUnmount(() => {
     revoke(musicPreview.value)
     revoke(artPreview.value)
 })
 
-async function upload() {
+async function save() {
     sending.value = true
     message.value = ''
     failed.value = false
     errors.value = {}
 
-    const formData = new FormData()
-    formData.append('title', title.value)
-    formData.append('artist', artist.value)
-    if (music.value) formData.append('music', music.value)
-    if (artwork.value) formData.append('img', artwork.value)
+    const data = new FormData()
+    data.append('title', title.value)
+    data.append('artist', artist.value)
+    if (music.value) data.append('music', music.value)
+    if (artwork.value) data.append('img', artwork.value)
 
-    const res = await store.storeMusicTrack(formData)
+    const res = props.id
+        ? await store.updateMusicTrack(props.id, data)
+        : await store.storeMusicTrack(data)
     sending.value = false
 
     if (!res.ok) {
@@ -83,152 +109,75 @@ async function upload() {
         return
     }
 
-    message.value = res.data?.message ?? 'guardado'
-    await store.getMusicTracks()
-    setTimeout(() => router.push({ name: 'music' }), 900)
+    router.push({ name: 'music' })
 }
 </script>
 
 <template>
-    <form class="forge" @submit.prevent="upload">
-        <section class="panel">
-            <header class="panel__head"></header>
+    <p v-if="missing" class="dd-state dd-state--bad">
+        no existe
+        <RouterLink class="dd-state__detail" :to="{ name: 'music' }">volver</RouterLink>
+    </p>
 
-            <div class="panel__body forge__body">
-                <header>
-                    <h1 class="t-heading">subir pista</h1>
-                    <p class="t-mute">sonará de fondo mientras se pasea por el cuarto.</p>
-                </header>
+    <form v-else class="dd-form" @submit.prevent="save">
+        <section class="dd-win">
+            <h1 class="dd-win__bar">{{ id ? 'editar canción' : 'subir canción' }}</h1>
 
-                <div class="forge__fields">
-                    <div class="field">
-                        <label class="field__label" for="mt-title">título</label>
-                        <input
-                            id="mt-title"
-                            v-model="title"
-                            type="text"
-                            class="input"
-                            placeholder="ej. Petal Dance"
-                            autocomplete="off"
-                        >
-                        <span v-if="errors.title" class="field__error">{{ errors.title[0] }}</span>
-                    </div>
-
-                    <div class="field">
-                        <label class="field__label" for="mt-artist">artista</label>
-                        <input
-                            id="mt-artist"
-                            v-model="artist"
-                            type="text"
-                            class="input"
-                            placeholder="ej. Toby Fox"
-                            autocomplete="off"
-                        >
-                        <span v-if="errors.artist" class="field__error">{{ errors.artist[0] }}</span>
-                    </div>
-
-                    <div class="field">
-                        <label class="field__label" for="mt-audio">audio</label>
-                        <input
-                            id="mt-audio"
-                            type="file"
-                            accept="audio/mpeg,audio/wav,.mp3,.wav"
-                            class="input input--file"
-                            @change="onMusicChange"
-                        >
-                        <span v-if="errors.music" class="field__error">{{ errors.music[0] }}</span>
-                        <span v-else class="field__hint">mp3 o wav, hasta 125 MB</span>
-                    </div>
-
-                    <div class="field">
-                        <label class="field__label" for="mt-art">carátula</label>
-                        <input
-                            id="mt-art"
-                            type="file"
-                            accept="image/jpeg,image/png,image/gif"
-                            class="input input--file"
-                            @change="onArtworkChange"
-                        >
-                        <span v-if="errors.img" class="field__error">{{ errors.img[0] }}</span>
-                        <span v-else-if="!isSquare" class="field__error">
-                            tiene que ser cuadrada. Esta es {{ size.width }}×{{ size.height }}.
-                        </span>
-                        <span v-else class="field__hint">jpg, png o gif, cuadrada, hasta 32 MB</span>
-                    </div>
-
+            <div class="dd-form__fields">
+                <div class="dd-field">
+                    <label class="dd-field__label" for="mt-title">título</label>
+                    <input id="mt-title" v-model="title" type="text" class="dd-input" autocomplete="off">
+                    <span v-if="errors.title" class="dd-field__error">{{ errors.title[0] }}</span>
                 </div>
 
-                <footer class="forge__foot">
-                    <RouterLink class="btn btn--ghost" :to="{ name: 'music' }">cancelar</RouterLink>
-                    <button
-                        class="btn btn--primary"
-                        type="submit"
-                        :disabled="sending || !music || !artwork || !isSquare || !title.trim() || !artist.trim()"
-                    >
-                        <span v-if="sending" class="loading-dots">subiendo</span>
-                        <span v-else>guardar</span>
-                    </button>
-                </footer>
+                <div class="dd-field">
+                    <label class="dd-field__label" for="mt-artist">artista</label>
+                    <input id="mt-artist" v-model="artist" type="text" class="dd-input" autocomplete="off">
+                    <span v-if="errors.artist" class="dd-field__error">{{ errors.artist[0] }}</span>
+                </div>
 
-                <p
-                    v-if="message"
-                    class="forge__msg"
-                    :class="{ 'forge__msg--bad': failed }"
-                    role="status"
-                >
-                    {{ failed ? '✕' : '▸' }} {{ message }}
+                <div class="dd-field">
+                    <label class="dd-field__label" for="mt-audio">audio</label>
+                    <input id="mt-audio" type="file" accept="audio/mpeg,audio/wav,.mp3,.wav" class="dd-input" @change="onMusicChange">
+                    <span v-if="errors.music" class="dd-field__error">{{ errors.music[0] }}</span>
+                    <span v-else class="dd-field__hint">{{ id ? 'vacío deja el actual; ' : '' }}mp3 o wav, hasta 125 MB</span>
+                </div>
+
+                <div class="dd-field">
+                    <label class="dd-field__label" for="mt-art">carátula</label>
+                    <input id="mt-art" type="file" accept="image/jpeg,image/png,image/gif" class="dd-input" @change="onArtworkChange">
+                    <span v-if="errors.img" class="dd-field__error">{{ errors.img[0] }}</span>
+                    <span v-else-if="!isSquare" class="dd-field__error">
+                        tiene que ser cuadrada, esta es de {{ size.width }} por {{ size.height }}
+                    </span>
+                    <span v-else class="dd-field__hint">{{ id ? 'vacío deja la actual; ' : '' }}cuadrada; jpg, png o gif, hasta 32 MB</span>
+                </div>
+            </div>
+
+            <div class="dd-form__foot">
+                <p v-if="message" class="dd-form__msg" :class="{ 'dd-form__msg--bad': failed }" role="status">
+                    {{ message }}
                 </p>
+                <RouterLink class="dd-btn" :to="{ name: 'music' }">cancelar</RouterLink>
+                <button
+                    class="dd-btn dd-btn--tone"
+                    type="submit"
+                    :disabled="sending || !ready"
+                >
+                    {{ sending ? 'guardando' : 'guardar' }}
+                </button>
             </div>
         </section>
 
-        <aside class="forge__side">
-            <section class="panel">
-                <header class="panel__head"></header>
-
-                <div class="panel__body">
-                    <div class="tape__body cassette">
-                        <div class="tape__art">
-                            <img v-if="artPreview" class="tape__img" :src="artPreview" alt="">
-                            <span v-else class="tape__art-empty" aria-hidden="true">♪</span>
-                        </div>
-
-                        <div class="tape__text">
-                            <p class="tape__title">{{ title || 'sin título' }}</p>
-                            <p class="tape__artist">{{ artist || 'artista desconocido' }}</p>
-                        </div>
-                    </div>
-
-                    <div v-if="!isSquare" class="cassette__warn">
-                        ✕ la carátula tiene que ser cuadrada
-                    </div>
-                </div>
-            </section>
-
-            <section v-if="musicPreview"  class="panel">
-                <header class="panel__head"></header>
-                <div class="panel__body">
-                    <audio
-                        class="forge__audio"
-                        :src="musicPreview"
-                        controls
-                        preload="metadata"
-                    ></audio>
-                </div>
-            </section>
-
-        </aside>
+        <section class="dd-win" aria-label="Vista previa">
+            <div class="dd-win__bar">vista previa</div>
+            <img v-if="shownArt" class="dd-preview-img" :src="shownArt" alt="">
+            <div v-else class="dd-preview-img dd-scan"></div>
+            <div class="dd-form__preview">
+                <span>{{ title || 'sin título' }}</span>
+                <span class="dd-small">{{ artist || 'sin artista' }}</span>
+                <audio v-if="shownAudio" class="dd-audio" :src="shownAudio" controls preload="metadata"></audio>
+            </div>
+        </section>
     </form>
 </template>
-
-<style scoped>
-.cassette {
-    padding: var(--sp-3);
-}
-
-.cassette__warn {
-    margin-top: var(--sp-3);
-    font-family: var(--font-term);
-    font-size: var(--fs-xs);
-    color: var(--pink);
-}
-</style>

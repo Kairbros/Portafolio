@@ -1,103 +1,82 @@
 <script setup>
-import { useSkillStore } from '@/stores/Store';
-import { computed, onMounted, ref } from 'vue';
-import { fileUrl } from '@/utils/media';
-import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
+import { computed, onMounted, ref } from 'vue'
+import { useSkillStore } from '@/stores/Store'
+import { track } from '@/composables/useLoader'
+import { fileUrl } from '@/utils/media'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import PencilIcon from '~icons/pixelarticons/pencil'
 
-const skill_store = useSkillStore()
-const loading = ref(false)
+const store = useSkillStore()
 
 const pending = ref(null)
 const deleting = ref(false)
 const notice = ref('')
 
+const skills = computed(() => store.skills ?? [])
+
 async function remove() {
     if (!pending.value) return
 
     deleting.value = true
-    const res = await skill_store.deleteSkill(pending.value.id)
+    const res = await store.deleteSkill(pending.value.id)
     deleting.value = false
 
-    notice.value = res.ok ? 'skill eliminada' : res.message
+    notice.value = res.ok ? 'borrado' : res.message
     pending.value = null
 
-    if (res.ok) await skill_store.getSkills()
+    if (res.ok) await track(store.getSkills())
 }
 
-const skills = computed(() => skill_store.skills ?? [])
-
-onMounted(async () => {
-    loading.value = true
-    await skill_store.getSkills()
-    loading.value = false
-})
+onMounted(() => track(store.getSkills()))
 </script>
 
 <template>
-    <div class="view">
-        <section class="panel">
-            <header class="panel__head"></header>
+    <div>
+        <div class="dd-heading">
+            <h1 class="dd-title">skills</h1>
+            <RouterLink class="dd-btn dd-btn--tone" :to="{ name: 'skill_create' }">nueva</RouterLink>
+        </div>
 
-            <div class="panel__body archive__head">
-                <h1 class="t-title fx-glitch" data-text="skills">Skills</h1>
-                <RouterLink class="btn btn--primary" :to="{ name: 'skill_create' }">
-                    nueva
-                </RouterLink>
-            </div>
+        <p v-if="store.error" class="dd-state dd-state--bad">
+            no se pudo leer
+            <span class="dd-state__detail">{{ store.error }}</span>
+        </p>
+
+        <section v-else-if="skills.length" class="dd-win">
+            <div class="dd-win__bar">{{ skills.length }} en total</div>
+            <ul class="dd-rows">
+                <li v-for="skill in skills" :key="skill.id" class="dd-row">
+                    <img
+                        v-if="skill.icon"
+                        class="dd-row__thumb dd-row__thumb--contain"
+                        :src="fileUrl(skill.icon)"
+                        alt=""
+                        loading="lazy"
+                    >
+                    <span v-else class="dd-row__thumb dd-scan" aria-hidden="true"></span>
+
+                    <div class="dd-row__text">
+                        <span class="dd-row__name">{{ skill.name }}</span>
+                        <span class="dd-row__meta">{{ skill.type?.name ?? 'sin tipo' }}, {{ skill.mastery }} de 100</span>
+                    </div>
+
+                    <div class="dd-row__actions">
+                        <RouterLink class="dd-row__edit" :to="{ name: 'skill_edit', params: { id: skill.id } }" aria-label="Editar" title="editar">
+                            <PencilIcon aria-hidden="true" />
+                        </RouterLink>
+                        <button type="button" class="dd-link-btn" @click="pending = skill">borrar</button>
+                    </div>
+                </li>
+            </ul>
         </section>
 
-        <div v-if="loading" class="state">
-            <p class="state__glyph fx-flicker">✦</p>
-            <p class="loading-dots">cargando</p>
-        </div>
+        <p v-else-if="store.loaded" class="dd-state">vacío</p>
 
-        <div v-else-if="skill_store.error" class="state state--bad">
-            <p class="state__glyph">✕</p>
-            <p>no se pudo leer el cajón</p>
-            <p class="t-mute">{{ skill_store.error }}</p>
-        </div>
-
-        <ul v-else-if="skills.length" class="entry-list">
-            <li v-for="skill in skills" :key="skill.id">
-                <article class="entry">
-                    <span class="entry__index" aria-hidden="true">
-                        <img v-if="skill.icon" class="skill-row__icon" :src="fileUrl(skill.icon)" alt="">
-                    </span>
-
-                    <div class="entry__text">
-                        <h2 class="entry__name">{{ skill.name }}</h2>
-
-                        <div class="entry__meta">
-                            <span class="tag">{{ skill.type?.name ?? 'sin tipo' }}</span>
-                            <span class="skill-row__pct">{{ skill.mastery }}%</span>
-                        </div>
-
-                        <span class="skill-bar" aria-hidden="true">
-                            <span class="skill-bar__fill" :style="{ width: `${skill.mastery}%` }"></span>
-                        </span>
-                    </div>
-
-                    <div class="entry__actions">
-                        <button class="btn btn--danger" type="button" @click="pending = skill">
-                            borrar
-                        </button>
-                    </div>
-                </article>
-            </li>
-        </ul>
-
-        <div v-else class="state">
-            <p class="state__glyph">◌</p>
-            <p>no hay skills todavía</p>
-            <p class="t-mute">nada guardado en este cajón.</p>
-        </div>
-
-        <p v-if="notice" class="notice view__tail" role="status">▸ {{ notice }}</p>
+        <p v-if="notice" class="dd-notice" role="status">{{ notice }}</p>
 
         <ConfirmDialog
             :model-value="!!pending"
-            title="eliminar skill"
-            message="Se borrará el registro y su icono del servidor."
+            title="borrar skill"
             :target="pending?.name ?? ''"
             :busy="deleting"
             @update:model-value="pending = null"
@@ -105,40 +84,3 @@ onMounted(async () => {
         />
     </div>
 </template>
-
-<style scoped>
-.entry__text {
-    display: grid;
-    gap: var(--sp-1);
-    min-width: 0;
-}
-
-.skill-row__icon {
-    width: 32px;
-    height: 32px;
-    object-fit: contain;
-}
-
-.skill-row__pct {
-    font-family: var(--font-term);
-    font-size: var(--fs-xs);
-    color: var(--ash);
-}
-
-.entry__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-2);
-}
-
-@media (max-width: 560px) {
-    .entry {
-        grid-template-columns: auto 1fr;
-    }
-
-    .entry .btn {
-        grid-column: 1 / -1;
-        justify-content: center;
-    }
-}
-</style>

@@ -4,15 +4,13 @@ import { onBeforeUnmount, ref, watch } from 'vue'
 const props = withDefaults(defineProps<{
   modelValue: boolean
   title?: string
-  message?: string
   target?: string
   confirmLabel?: string
   busy?: boolean
 }>(), {
-  title: 'confirmar',
-  message: '¿Seguro que quieres eliminarlo?',
+  title: 'borrar',
   target: '',
-  confirmLabel: 'eliminar',
+  confirmLabel: 'borrar',
   busy: false,
 })
 
@@ -51,49 +49,31 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
-    <Transition name="lb">
-      <div
-        v-if="modelValue"
-        class="lightbox confirm"
-        role="dialog"
-        aria-modal="true"
-        :aria-label="title"
-        @click.self="close"
-      >
-        <div class="confirm__window" @click.stop>
-          <header class="confirm__bar">
-            <span class="confirm__title">{{ title }}</span>
-          </header>
+    <div
+      v-if="modelValue"
+      class="dd-modal"
+      role="alertdialog"
+      aria-modal="true"
+      :aria-label="title"
+      @click.self="close"
+    >
+      <div class="dd-win dd-modal__win dd-confirm">
+        <div class="dd-win__bar">{{ title }}</div>
 
-          <div class="confirm__body">
-            <p class="confirm__msg">{{ message }}</p>
-            <p v-if="target" class="confirm__target">{{ target }}</p>
-            <p class="confirm__warn">esto no se puede deshacer.</p>
-          </div>
+        <div class="dd-confirm__body">
+          <p v-if="target" class="dd-confirm__target">{{ target }}</p>
+          <p>No se puede deshacer.</p>
+        </div>
 
-          <footer class="confirm__foot">
-            <button
-              ref="cancelButton"
-              type="button"
-              class="btn btn--ghost"
-              :disabled="busy"
-              @click="close"
-            >
-              cancelar
-            </button>
-
-            <button
-              type="button"
-              class="btn btn--danger"
-              :disabled="busy"
-              @click="emit('confirm')"
-            >
-              <span v-if="busy" class="loading-dots">borrando</span>
-              <span v-else>{{ confirmLabel }}</span>
-            </button>
-          </footer>
+        <div class="dd-form__foot">
+          <button ref="cancelButton" type="button" class="dd-btn" :disabled="busy" @click="close">
+            cancelar
+          </button>
+          <button type="button" class="dd-btn dd-btn--danger" :disabled="busy" @click="emit('confirm')">
+            {{ busy ? 'borrando' : confirmLabel }}
+          </button>
         </div>
       </div>
-    </Transition>
+    </div>
   </Teleport>
 </template>

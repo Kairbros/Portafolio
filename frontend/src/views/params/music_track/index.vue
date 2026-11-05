@@ -1,30 +1,25 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useMusicStore } from '@/stores/Store'
+import { track } from '@/composables/useLoader'
 import { fileUrl } from '@/utils/media'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import PencilIcon from '~icons/pixelarticons/pencil'
 
 const store = useMusicStore()
-const loading = ref(false)
 
 const pending = ref(null)
 const deleting = ref(false)
 const notice = ref('')
-
 const playingId = ref(null)
 let audio = null
 
 const tracks = computed(() => store.musicTracks ?? [])
 
-function trackName(track) {
-    if (track.title) return track.title
-
-    const file = String(track.path ?? '').split('/').pop() ?? ''
-    return file
-        .replace(/^\d+_/, '')
-        .replace(/\.[^.]+$/, '')
-        .replace(/[-_]+/g, ' ')
-        || 'sin título'
+function trackName(item) {
+    if (item.title) return item.title
+    const file = String(item.path ?? '').split('/').pop() ?? ''
+    return file.replace(/^\d+_/, '').replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ') || 'sin título'
 }
 
 function stop() {
@@ -33,111 +28,91 @@ function stop() {
     playingId.value = null
 }
 
-function toggle(track) {
-    if (playingId.value === track.id) return stop()
+function toggle(item) {
+    if (playingId.value === item.id) return stop()
 
     stop()
-    audio = new Audio(fileUrl(track.path))
+    audio = new Audio(fileUrl(item.path))
     audio.volume = 0.6
     audio.addEventListener('ended', stop)
-    audio.play().catch(() => stop())
-    playingId.value = track.id
+    audio.play().catch(stop)
+    playingId.value = item.id
 }
 
 async function remove() {
     if (!pending.value) return
-
     if (playingId.value === pending.value.id) stop()
 
     deleting.value = true
     const res = await store.deleteMusicTrack(pending.value.id)
     deleting.value = false
 
-    notice.value = res.ok ? 'pista eliminada' : res.message
+    notice.value = res.ok ? 'borrada' : res.message
     pending.value = null
 
-    if (res.ok) await store.getMusicTracks()
+    if (res.ok) await track(store.getMusicTracks())
 }
 
-onMounted(async () => {
-    loading.value = true
-    await store.getMusicTracks()
-    loading.value = false
-})
-
+onMounted(() => track(store.getMusicTracks()))
 onBeforeUnmount(stop)
 </script>
 
 <template>
-    <div class="view">
-        <section class="panel">
-            <header class="panel__head"></header>
-
-            <div class="panel__body archive__head">
-                <h1 class="t-title fx-glitch" data-text="musica">Musica</h1>
-                <RouterLink class="btn btn--primary" :to="{ name: 'music_create' }">
-                    nueva
-                </RouterLink>
-            </div>
-        </section>
-
-        <div v-if="loading" class="state">
-            <p class="state__glyph fx-flicker">✦</p>
-            <p class="loading-dots">cargando</p>
+    <div>
+        <div class="dd-heading">
+            <h1 class="dd-title">música</h1>
+            <RouterLink class="dd-btn dd-btn--tone" :to="{ name: 'music_create' }">subir</RouterLink>
         </div>
 
-        <div v-else-if="store.error" class="state state--bad">
-            <p class="state__glyph">✕</p>
-            <p>no se pudo leer la cinta</p>
-            <p class="t-mute">{{ store.error }}</p>
-        </div>
+        <p v-if="store.error" class="dd-state dd-state--bad">
+            no se pudo leer
+            <span class="dd-state__detail">{{ store.error }}</span>
+        </p>
 
-        <ul v-else-if="tracks.length" class="track-list">
-            <li v-for="track in tracks" :key="track.id">
-                <article class="track" :class="{ 'track--playing': playingId === track.id }">
-                    <button
-                        type="button"
-                        class="track__art"
-                        :aria-label="playingId === track.id ? 'pausar' : `reproducir ${trackName(track)}`"
-                        @click="toggle(track)"
+        <section v-else-if="tracks.length" class="dd-win">
+            <div class="dd-win__bar">{{ tracks.length }} en total</div>
+            <ul class="dd-rows">
+                <li v-for="item in tracks" :key="item.id" class="dd-row">
+                    <img
+                        v-if="item.artwork_path"
+                        class="dd-row__thumb"
+                        :src="fileUrl(item.artwork_path)"
+                        alt=""
+                        loading="lazy"
                     >
-                        <img
-                            v-if="track.artwork_path"
-                            class="track__img"
-                            :src="fileUrl(track.artwork_path)"
-                            alt=""
-                            loading="lazy"
-                        >
-                        <span class="track__state" aria-hidden="true">
-                            {{ playingId === track.id ? '❚❚' : '▶' }}
-                        </span>
-                    </button>
+                    <span v-else class="dd-row__thumb dd-scan" aria-hidden="true"></span>
 
-                    <div class="track__text">
-                        <h2 class="track__name">{{ trackName(track) }}</h2>
-                        <p class="track__artist">{{ track.artist || 'artista desconocido' }}</p>
-                        <p class="track__file t-mute">{{ track.path }}</p>
+                    <div class="dd-row__text">
+                        <span class="dd-row__name">{{ trackName(item) }}</span>
+                        <span class="dd-row__meta">{{ item.artist || 'sin artista' }}</span>
                     </div>
 
-                    <button type="button" class="btn btn--danger" @click="pending = track">
-                        borrar
-                    </button>
-                </article>
-            </li>
-        </ul>
+                    <div class="dd-row__actions">
+                        <RouterLink class="dd-row__edit" :to="{ name: 'music_edit', params: { id: item.id } }" aria-label="Editar" title="editar">
+                            <PencilIcon aria-hidden="true" />
+                        </RouterLink>
+                        <button
+                            type="button"
+                            class="dd-btn"
+                            :class="{ 'dd-btn--tone': playingId === item.id }"
+                            :aria-pressed="playingId === item.id"
+                            @click="toggle(item)"
+                        >
+                            {{ playingId === item.id ? 'parar' : 'oír' }}
+                        </button>
+                        <button type="button" class="dd-link-btn" @click="pending = item">borrar</button>
+                    </div>
+                </li>
+            </ul>
+        </section>
 
-        <div v-else class="state">
-            <p class="state__glyph">◌</p>
-            <p>sin pistas</p>
-            <p class="t-mute">nada que poner en el radiocassette todavía.</p>
-        </div>
+        <p v-else-if="store.loaded" class="dd-state">vacío</p>
 
-        <p v-if="notice" class="notice view__tail" role="status">▸ {{ notice }}</p>
+        <p v-if="notice" class="dd-notice" role="status">{{ notice }}</p>
 
         <ConfirmDialog
             :model-value="!!pending"
-            title="eliminar pista"
-            message="El audio y su carátula desaparecerán del servidor."
+            title="borrar canción"
             :target="pending ? trackName(pending) : ''"
             :busy="deleting"
             @update:model-value="pending = null"
@@ -145,103 +120,3 @@ onBeforeUnmount(stop)
         />
     </div>
 </template>
-
-<style scoped>
-.track-list {
-    display: grid;
-    gap: var(--sp-2);
-}
-
-.track {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: var(--sp-4);
-    padding: var(--sp-3) var(--sp-4);
-    background: var(--panel);
-    border: var(--bd);
-    border-left: 6px solid var(--rot);
-    transition: border-color var(--t-snap), background var(--t-snap);
-}
-
-.track:hover {
-    background: var(--panel-hi);
-    border-left-color: var(--pink);
-}
-
-.track--playing {
-    border-color: var(--pink-deep);
-    border-left-color: var(--acid);
-}
-
-.track__art {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 64px;
-    height: 64px;
-    overflow: hidden;
-    background: var(--panel-lo);
-    border: 2px solid var(--line);
-    cursor: pointer;
-}
-
-.track__img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.track__state {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    background: rgba(7, 5, 12, 0.6);
-    color: var(--bone);
-    opacity: 0;
-    transition: opacity var(--t-snap);
-}
-
-.track__art:hover .track__state,
-.track__art:focus-visible .track__state,
-.track--playing .track__state {
-    opacity: 1;
-}
-
-.track--playing .track__state {
-    color: var(--acid);
-}
-
-.track__name {
-    font-family: var(--font-term);
-    font-size: var(--fs-lg);
-    letter-spacing: var(--tracking);
-    color: var(--bone);
-    overflow-wrap: anywhere;
-}
-
-.track__artist {
-    font-size: var(--fs-sm);
-    color: var(--fg-soft);
-    overflow-wrap: anywhere;
-}
-
-.track__file {
-    font-size: var(--fs-xs);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-@media (max-width: 560px) {
-    .track {
-        grid-template-columns: auto minmax(0, 1fr);
-    }
-
-    .track .btn {
-        grid-column: 1 / -1;
-        justify-content: center;
-    }
-}
-</style>

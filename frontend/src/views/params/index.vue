@@ -1,26 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import FolderWindow from '@/components/ui/FolderWindow.vue'
-import { isAdmin, signIn, signOut } from '@/utils/admin'
-
-const route = useRoute()
-
-const tabs = [
-    { label: 'proyectos', to: '/params/projects' },
-    { label: 'tipos', to: '/params/types' },
-    { label: 'fondos', to: '/params/backgrounds' },
-    { label: 'perfil', to: '/params/profiles' },
-    { label: 'musica', to: '/params/musictrack' },
-    { label: 'skills', to: '/params/skills' },
-    { label: 'tipos skill', to: '/params/typeskills' },
-]
-
-const path = computed(() =>
-    isAdmin.value
-        ? `User:\\params${route.path.replace('/params', '').replace(/\//g, '\\')}`
-        : 'User:\\params (bloqueado)',
-)
+import { ref } from 'vue'
+import { isAdmin, signIn } from '@/utils/admin'
 
 const user = ref('')
 const password = ref('')
@@ -44,117 +24,32 @@ async function enter() {
 </script>
 
 <template>
-    <FolderWindow :tabs="isAdmin ? tabs : [{ label: 'acceso' }]" :path="path">
-        <RouterView v-if="isAdmin" />
+    <!-- la key separa "nuevo" de "editar": usan el mismo formulario -->
+    <RouterView v-if="isAdmin" :key="$route.fullPath" />
 
-        <div v-else class="gate">
-            <form class="panel gate__box" @submit.prevent="enter">
-                <header class="panel__head"></header>
+    <div v-else class="dd-gate">
+        <form class="dd-win dd-gate__win" @submit.prevent="enter">
+            <h1 class="dd-win__bar">acceso</h1>
 
-                <div class="panel__body gate__body">
-
-                    <div class="gate__fields">
-                        <div class="field">
-                            <label class="field__label" for="gate-user">usuario</label>
-                            <input
-                                id="gate-user"
-                                v-model="user"
-                                type="text"
-                                class="input"
-                                autocomplete="username"
-                                autofocus
-                            >
-                        </div>
-
-                        <div class="field">
-                            <label class="field__label" for="gate-pass">contraseña</label>
-                            <input
-                                id="gate-pass"
-                                v-model="password"
-                                type="password"
-                                class="input"
-                                autocomplete="current-password"
-                            >
-                        </div>
-                    </div>
-
-                    <p v-if="message" class="field__error gate__error">{{ message }}</p>
-
-                    <div class="gate__actions">
-                        <button
-                            class="btn btn--primary gate__submit"
-                            type="submit"
-                            :disabled="sending || !user || !password"
-                        >
-                            {{ sending ? 'comprobando' : 'entrar' }}
-                        </button>
-
-                        <RouterLink class="gate__back" to="/">volver al inicio</RouterLink>
-                    </div>
+            <div class="dd-form__fields">
+                <div class="dd-field">
+                    <label class="dd-field__label" for="gate-user">usuario</label>
+                    <input id="gate-user" v-model="user" type="text" class="dd-input" autocomplete="username" autofocus>
                 </div>
-            </form>
-        </div>
 
-        <template #tabs>
-            <button v-if="isAdmin" type="button" class="folder__tab gate__out" @click="signOut">
-                salir
-            </button>
-        </template>
-    </FolderWindow>
+                <div class="dd-field">
+                    <label class="dd-field__label" for="gate-pass">contraseña</label>
+                    <input id="gate-pass" v-model="password" type="password" class="dd-input" autocomplete="current-password">
+                </div>
+
+                <p v-if="message" class="dd-field__error" role="alert">{{ message }}</p>
+            </div>
+
+            <div class="dd-form__foot">
+                <button class="dd-btn dd-btn--tone" type="submit" :disabled="sending || !user || !password">
+                    {{ sending ? 'entrando' : 'entrar' }}
+                </button>
+            </div>
+        </form>
+    </div>
 </template>
-
-<style scoped>
-.gate {
-    display: grid;
-    place-items: center;
-    min-height: 100%;
-    padding: var(--sp-8) var(--sp-4);
-}
-
-.gate__box {
-    width: min(26rem, 100%);
-}
-
-.gate__body {
-    display: grid;
-    gap: var(--sp-6);
-}
-
-.gate__fields {
-    display: grid;
-    gap: var(--sp-4);
-}
-
-.gate__error {
-    margin: 0;
-}
-
-.gate__actions {
-    display: grid;
-    justify-items: center;
-    gap: var(--sp-4);
-}
-
-.gate__submit {
-    justify-content: center;
-    width: 100%;
-}
-
-.gate__back {
-    font-family: var(--font-term);
-    font-size: var(--fs-sm);
-    letter-spacing: var(--tracking);
-    color: var(--fg-mute);
-    transition: color var(--t-snap);
-}
-
-.gate__back:hover,
-.gate__back:focus-visible {
-    color: var(--accent);
-}
-
-.gate__out {
-    margin-left: auto;
-    cursor: pointer;
-}
-</style>

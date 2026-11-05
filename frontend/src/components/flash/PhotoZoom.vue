@@ -44,34 +44,22 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
-    <Transition name="lb">
-      <div
-        v-if="modelValue"
-        class="lightbox"
-        role="dialog"
-        aria-modal="true"
-        :aria-label="title"
-        @click.self="close"
-      >
-        <figure class="lightbox__window" @click.stop>
-          <figcaption class="lightbox__bar">
-            <span class="lightbox__title">{{ title }}</span>
-            <button
-              ref="closeButton"
-              type="button"
-              class="lightbox__close"
-              aria-label="cerrar"
-              @click="close"
-            >
-              ✕
-            </button>
-          </figcaption>
+    <div
+      v-if="modelValue"
+      class="dd-modal"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="title"
+      @click.self="close"
+    >
+      <figure class="dd-win dd-modal__win">
+        <figcaption class="dd-win__bar">
+          <span class="dd-win__title">{{ title }}</span>
+          <button ref="closeButton" type="button" class="dd-modal__action" @click="close">cerrar</button>
+        </figcaption>
 
-          <div class="lightbox__stage">
-            <img class="lightbox__img" :src="src" :alt="alt">
-          </div>
-        </figure>
-      </div>
-    </Transition>
+        <img class="dd-modal__img" :src="src" :alt="alt">
+      </figure>
+    </div>
   </Teleport>
 </template>

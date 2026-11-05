@@ -1,22 +1,23 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
-import { RouterView } from 'vue-router';
+import { computed, onMounted, onUnmounted } from 'vue';
+import { RouterView, useRoute } from 'vue-router';
 import "./assets/main.css"
 import BackgroundStage from '@/components/BackgroundStage.vue';
 import NowPlaying from '@/components/NowPlaying.vue';
-import AudioDeck from '@/components/ui/AudioDeck.vue';
+import DreamStage from '@/components/flash/DreamStage.vue';
 import { play } from '@/composables/useSfx';
 import { startMusic } from '@/composables/useMusic';
 
-const CLICKABLE = '.btn, .row, .folder__tab, .file-icon, .door, .shortcut,'
-    + ' .thumb__view, .thumb__del, .type-card__hit, .dd__trigger, .dd__option, .zoomable, .folder__close, .lightbox__close,'
-    + ' .deck__key, .deck__trigger, .track__art'
+const route = useRoute()
 
-// const CLOSING = '.folder__close, .lightbox__close'
- const CLOSING = '.placeholder' // Añadir sonido de cierre
+const admin = computed(() => route.path.startsWith('/params'))
 
-const INERT = '[disabled], [aria-disabled="true"], .row--locked, .door--locked,'
-    + ' .folder__tab--current, .folder__tab.router-link-exact-active, .folder__close--off'
+const CLICKABLE = 'a[href], button'
+
+// const CLOSING = '.dd-modal__action'
+const CLOSING = '.placeholder' // Añadir sonido de cierre
+
+const INERT = '[disabled], [aria-disabled="true"], [aria-current="page"]'
 
 function hit(event: Event): Element | null {
     const target = event.target
@@ -64,20 +65,9 @@ onUnmounted(() => {
 <template>
     <BackgroundStage />
 
-    <div class="grain" aria-hidden="true"></div>
-    <div class="crt" aria-hidden="true">
-        <div class="crt__roll"></div>
-    </div>
-
-    <div>
-        <div class="glitch"></div>
-    </div>
-
-    <main>
+    <DreamStage :admin="admin">
         <RouterView />
-    </main>
+    </DreamStage>
 
     <NowPlaying />
-
-    <AudioDeck />
 </template>

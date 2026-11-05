@@ -49,16 +49,11 @@ function onKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="tags">
-    <span v-for="tag in modelValue" :key="tag" class="tags__item">
+  <div class="dd-tags">
+    <span v-for="tag in modelValue" :key="tag" class="dd-tags__item">
       {{ tag }}
-      <button
-        type="button"
-        class="tags__remove"
-        :aria-label="`quitar ${tag}`"
-        @click="remove(tag)"
-      >
-        ✕
+      <button type="button" class="dd-tags__remove" :aria-label="`quitar ${tag}`" @click="remove(tag)">
+        quitar
       </button>
     </span>
 
@@ -66,7 +61,7 @@ function onKeydown(event: KeyboardEvent) {
       :id="props.id"
       v-model="draft"
       type="text"
-      class="tags__input"
+      class="dd-tags__input"
       :placeholder="modelValue.length ? '' : placeholder"
       autocomplete="off"
       @keydown="onKeydown"

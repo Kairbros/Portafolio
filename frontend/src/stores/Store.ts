@@ -16,6 +16,15 @@ function readError(error: unknown): { message: string; errors: FieldErrors } {
     return { message: 'Ocurrió un error inesperado.', errors: {} }
 }
 
+// PHP no lee multipart en PUT: va por POST y Laravel lo trata como PUT
+function sendUpdate(url: string, params: FormData | object) {
+    if (params instanceof FormData) {
+        params.append('_method', 'PUT')
+        return axios.post(url, params)
+    }
+    return axios.put(url, params)
+}
+
 export const useProjectStore = defineStore('projects', {
     state: () => ({
         projects: [] as any[],
@@ -73,6 +82,16 @@ export const useProjectStore = defineStore('projects', {
             }
         },
 
+        async updateProject(id: string | number, params: FormData | object) {
+            try {
+                const res = await sendUpdate(`${api_url}/projects/${id}`, params)
+                this.forget()
+                return { ok: true as const, data: res.data }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
+        },
+
         forget() {
             this.loaded = false
             this.opened = {}
@@ -117,6 +136,16 @@ export const useTypeProjectStore = defineStore('typeProjects', {
         async storeTypeProject(params: object) {
             try {
                 const res = await axios.post(`${api_url}/typeprojects`, params)
+                this.loaded = false
+                return { ok: true as const, data: res.data }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
+        },
+
+        async updateTypeProject(id: string | number, params: FormData | object) {
+            try {
+                const res = await sendUpdate(`${api_url}/typeprojects/${id}`, params)
                 this.loaded = false
                 return { ok: true as const, data: res.data }
             } catch (error) {
@@ -261,6 +290,16 @@ export const useMusicStore = defineStore(('musicTracks'), {
             }
         },
 
+        async updateMusicTrack(id: string | number, params: FormData | object) {
+            try {
+                const res = await sendUpdate(`${api_url}/musictrack/${id}`, params)
+                this.loaded = false
+                return { ok: true as const, data: res.data }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
+        },
+
         async deleteMusicTrack(id: string) {
             this.error = ''
             try {
@@ -302,6 +341,16 @@ export const useTypeSkillStore = defineStore('typeSkills', {
             this.error = ''
             try {
                 const res = await axios.post(`${api_url}/typeskill`, params)
+                this.loaded = false
+                return { ok: true as const, data: res.data }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
+        },
+
+        async updateTypeSkill(id: string | number, params: FormData | object) {
+            try {
+                const res = await sendUpdate(`${api_url}/typeskill/${id}`, params)
                 this.loaded = false
                 return { ok: true as const, data: res.data }
             } catch (error) {
@@ -357,6 +406,16 @@ export const useSkillStore = defineStore('skills', {
             }
         },
 
+        async updateSkill(id: string | number, params: FormData | object) {
+            try {
+                const res = await sendUpdate(`${api_url}/skills/${id}`, params)
+                this.loaded = false
+                return { ok: true as const, data: res.data }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
+        },
+
         async deleteSkill(id: string) {
             this.error = ''
             try {
@@ -367,5 +426,51 @@ export const useSkillStore = defineStore('skills', {
                 return { ok: false as const, ...readError(error) }
             }
         },
+    },
+})
+
+export const useStickerStore = defineStore('stickers', {
+    state: () => ({
+        stickers: [] as any[],
+        loaded: false,
+        error: '' as string,
+    }),
+
+    actions: {
+        async getStickers() {
+            this.error = ''
+            try {
+                const res = await axios.get(`${api_url}/stickers`)
+                this.stickers = res.data
+                this.loaded = true
+            } catch (error) {
+                this.error = readError(error).message
+            }
+        },
+
+        async ensureStickers() {
+            if (this.loaded) return
+            await this.getStickers()
+        },
+
+        async storeSticker(params: object) {
+            try {
+                const res = await axios.post(`${api_url}/stickers`, params)
+                this.loaded = false
+                return { ok: true as const, data: res.data }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
+        },
+
+        async deleteSticker(id: string) {
+            try {
+                const res = await axios.delete(`${api_url}/stickers/${id}`)
+                this.loaded = false
+                return { ok: true as const, data: res.data }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
+        }
     },
 })
