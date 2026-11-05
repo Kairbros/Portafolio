@@ -57,4 +57,20 @@ class TypeSkillController extends Controller
             'data' => $this->type_skill_repository->save_item($data),
         ], 201);
     }
+
+    function update(Request $request, string $id)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255|min:2',
+        ], [
+            'name.min'      => 'El nombre debe tener al menos :min caracteres.',
+            'name.required' => 'El nombre es obligatorio.',
+            'name.max'      => 'El nombre no puede superar los :max caracteres.',
+        ]);
+
+        return response()->json([
+            'message' => 'tipo de skill actualizado',
+            'data' => $this->type_skill_repository->update_item($id, $data),
+        ], 200);
+    }
 }

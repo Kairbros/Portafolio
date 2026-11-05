@@ -61,4 +61,25 @@ class TypeProjectController extends Controller
 
         return $this->type_project_repository->save_item($data);
     }
+
+    function update(Request $request, string $id)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255|min:2',
+            'description' => 'required|string|max:255',
+            'extension' => 'nullable|string|max:255',
+        ], [
+            'name.min'      => 'El nombre debe tener al menos :min caracteres.',
+            'name.required' => 'El nombre es obligatorio.',
+            'name.max'      => 'El nombre no puede superar los :max caracteres.',
+            'description.required' => 'La descripción es obligatoria.',
+            'description.max' => 'La descripción no puede superar los :max caracteres.',
+            'extension.max' => 'La extensión no puede superar los :max caracteres.',
+        ]);
+
+        return response()->json([
+            'message' => 'tipo de proyecto actualizado',
+            'data' => $this->type_project_repository->update_item($id, $data),
+        ], 200);
+    }
 }

@@ -83,6 +83,69 @@ class SkillsController extends Controller
         }
     }
 
+    function update(Request $request, string $id)
+    {
+        $skill = $this->skill_repository->get_item($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|min:2|max:120',
+            'type' => 'required|integer|exists:type_skill,id',
+            'icon' => 'nullable|image:allow_svg|mimes:svg,png,webp,jpg,jpeg,gif|max:2048',
+            'mastery' => 'required|integer|between:0,100',
+        ], [
+            'name.required'    => 'El nombre de la skill es obligatorio.',
+            'name.min'         => 'El nombre debe tener al menos :min caracteres.',
+            'name.max'         => 'El nombre no puede superar los :max caracteres.',
+            'type.required'    => 'La skill necesita un tipo.',
+            'type.exists'      => 'Ese tipo de skill no existe.',
+            'icon.image'       => 'El icono tiene que ser una imagen.',
+            'icon.mimes'       => 'El icono debe ser de tipo: :values.',
+            'icon.max'         => 'El icono no puede pesar más de 2 MB.',
+            'mastery.required' => 'Falta el nivel de dominio.',
+            'mastery.between'  => 'El dominio va de :min a :max.',
+        ]);
+
+        $old_icon = $skill->icon;
+        $new_icon = null;
+
+        try {
+            $data = [
+                'id_type_skill' => $validated['type'],
+                'name' => $validated['name'],
+                'mastery' => $validated['mastery'],
+            ];
+
+            if ($request->hasFile('icon')) {
+                $icon = $request->file('icon');
+                $new_icon = $icon->storeAs(
+                    'skills',
+                    time() . '_' . Str::slug($validated['name'])
+                        . '.' . strtolower($icon->getClientOriginalExtension()),
+                    'public',
+                );
+                $data['icon'] = $new_icon;
+            }
+
+            $skill = $this->skill_repository->update_item($id, $data);
+
+            if ($new_icon && $old_icon && $old_icon !== $new_icon) Storage::disk('public')->delete($old_icon);
+
+            return response()->json([
+                'message' => 'skill actualizada',
+                'data' => $skill->load('type'),
+            ], 200);
+        } catch (\Exception $e) {
+            if ($new_icon) Storage::disk('public')->delete($new_icon);
+
+            Log::error('error al actualizar la skill', ['exception' => $e]);
+
+            return response()->json([
+                'message' => 'error al actualizar la skill',
+                'error' => app()->isLocal() ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
     function delete(string $id)
     {
         try {
