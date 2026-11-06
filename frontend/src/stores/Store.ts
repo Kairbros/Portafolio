@@ -5,7 +5,7 @@ const api_url = import.meta.env.VITE_API_URL;
 
 type FieldErrors = Record<string, string[]>
 
-function readError(error: unknown): { message: string; errors: FieldErrors } {
+export function readError(error: unknown): { message: string; errors: FieldErrors } {
     if (axios.isAxiosError(error)) {
         const data = error.response?.data as { message?: string; errors?: FieldErrors } | undefined
         return {

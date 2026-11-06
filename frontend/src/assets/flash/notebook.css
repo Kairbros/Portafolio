@@ -1,0 +1,346 @@
+/* Libreta: dibujos pixel de visitantes pegados en páginas */
+
+.nb {
+  display: grid;
+  gap: 18px;
+}
+
+.nb__start {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nb__start p {
+  margin: 0;
+}
+
+.nb__draw {
+  gap: 8px;
+}
+
+.nb__draw-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ventana para dibujar */
+.nb-compose {
+  width: min(680px, 100%);
+}
+
+.nb__compose {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: 4px;
+  align-items: start;
+  overflow-y: auto;
+}
+
+.nb__fields {
+  display: grid;
+  gap: 14px;
+  padding: 12px;
+}
+
+.nb__send {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.nb__send p {
+  margin: 0;
+}
+
+.nb__trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+/* ---------- editor ---------- */
+
+.nb-editor {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.nb-editor__canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  image-rendering: pixelated;
+  touch-action: none;
+  cursor: crosshair;
+  border: 1px solid var(--dd-line);
+}
+
+.nb-palette {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.nb-palette__swatch {
+  aspect-ratio: 1;
+  border: 1px solid var(--dd-line);
+}
+
+.nb-palette__swatch[aria-pressed='true'] {
+  outline: 2px solid var(--dd-bone);
+  outline-offset: 1px;
+}
+
+.nb-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nb-tools .dd-btn[aria-pressed='true'] {
+  color: var(--dd-bone);
+  background: var(--dd-hover);
+  border-color: var(--dd-frame);
+}
+
+/* ---------- páginas ---------- */
+
+.nb__book {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.nb__turn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nb__turn-end {
+  display: flex;
+  gap: 6px;
+}
+
+.nb__count {
+  font-family: var(--dd-pixel);
+  font-size: 11px;
+  color: var(--dd-dust);
+  font-variant-numeric: tabular-nums;
+}
+
+.nb-sheet {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 27px, rgba(74, 58, 94, 0.25) 27px 28px),
+    var(--dd-well);
+  border: 1px solid var(--dd-line);
+}
+
+.nb-sheet__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--dd-dust);
+  font-size: 14px;
+}
+
+.nb-card {
+  position: absolute;
+  width: 18%;
+  display: grid;
+  gap: 3px;
+  padding: 6px 6px 4px;
+  background: var(--dd-hover);
+  border: 1px solid var(--dd-frame);
+  box-shadow: 3px 3px 0 rgba(7, 5, 12, 0.7);
+  transform-origin: 50% 50%;
+  user-select: none;
+  cursor: zoom-in;
+}
+
+.nb-card:hover {
+  border-color: var(--dd-lilac);
+}
+
+.nb-card .nb-thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  image-rendering: pixelated;
+}
+
+.nb-card__name {
+  overflow: hidden;
+  font-family: var(--dd-pixel);
+  font-size: 9px;
+  color: var(--dd-dust);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nb-sheet--board .nb-card {
+  cursor: grab;
+  touch-action: none;
+}
+
+.nb-sheet--board .nb-card:active {
+  cursor: grabbing;
+}
+
+.nb-sheet--board .nb-card.is-selected {
+  border-color: var(--dd-tone);
+  outline: 1px dashed var(--dd-tone);
+  outline-offset: 3px;
+}
+
+/* manija para girar, sólo en la tarjeta seleccionada */
+.nb-card__rotate {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  display: none;
+  width: 16px;
+  height: 16px;
+  background: var(--dd-stage);
+  border: 2px solid var(--dd-tone);
+  cursor: grab;
+  touch-action: none;
+}
+
+.nb-card__rotate::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  background: var(--dd-tone);
+}
+
+.nb-card.is-selected .nb-card__rotate {
+  display: block;
+}
+
+/* ---------- ver un dibujo ---------- */
+
+.nb-view {
+  width: min(380px, 100%);
+}
+
+.nb-view__body {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  overflow-y: auto;
+}
+
+.nb-view__img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  image-rendering: pixelated;
+  border: 1px solid var(--dd-line);
+}
+
+.nb-view__comment {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.nb-view__body .dd-small {
+  margin: 0;
+}
+
+/* ---------- panel ---------- */
+
+.nb-admin {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.nb-queue {
+  max-height: 440px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.nb-queue__item {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  border-top: 1px solid var(--dd-line);
+}
+
+.nb-queue__item:first-child {
+  border-top: 0;
+}
+
+.nb-queue__img {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  border: 1px solid var(--dd-line);
+}
+
+.nb-queue__text {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.nb-queue__comment {
+  color: var(--dd-dust);
+  overflow-wrap: anywhere;
+}
+
+.nb-queue__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.nb-queue__empty {
+  padding: 12px;
+}
+
+.nb-admin__tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+}
+
+.nb-admin__tools p {
+  margin: 0;
+}
+
+@media (max-width: 860px) {
+  .nb__compose,
+  .nb-admin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nb__compose .nb-editor {
+    max-width: 340px;
+  }
+
+  .nb-card {
+    width: 24%;
+  }
+}

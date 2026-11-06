@@ -23,6 +23,7 @@ const publicSections = computed<Item[]>(() => [
     { key: 'projects', label: t('nav.projects'), to: '/projects', tone: 'var(--dd-projects)' },
     { key: 'about', label: t('nav.about'), to: '/about', tone: 'var(--dd-about)' },
     { key: 'skills', label: t('nav.skills'), to: '/skills', tone: 'var(--dd-skills)' },
+    { key: 'notebook', label: t('nav.notebook'), to: '/notebook', tone: 'var(--dd-notebook)' },
 ])
 
 const adminSections: Item[] = [
@@ -34,6 +35,7 @@ const adminSections: Item[] = [
     { key: 'skills', label: 'skills', to: '/params/skills' },
     { key: 'typeskills', label: 'tipos de skill', to: '/params/typeskills' },
     { key: 'about', label: 'sobre mí', to: '/params/about' },
+    { key: 'notebook', label: 'libreta', to: '/params/notebook' },
     { key: 'stickers', label: 'stickers', to: '/params/stickers' },
 ].map((item) => ({ ...item, tone: 'var(--dd-bone)' }))
 

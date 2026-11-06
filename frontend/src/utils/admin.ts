@@ -18,7 +18,10 @@ function encode(user: string, password: string): string {
 axios.interceptors.request.use((config) => {
     const method = (config.method ?? 'get').toLowerCase()
 
-    if (token.value && method !== 'get' && method !== 'head') {
+    // las lecturas públicas van sin credencial; las de /admin/ la necesitan
+    const privateRead = String(config.url ?? '').includes('/admin/')
+
+    if (token.value && (privateRead || (method !== 'get' && method !== 'head'))) {
         config.headers.Authorization = `Basic ${token.value}`
     }
 

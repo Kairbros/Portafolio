@@ -38,6 +38,8 @@ import main_shell from '@/views/main/index.vue'
 import main_home from '@/views/main/home.vue'
 import main_about from '@/views/main/about.vue'
 import main_skills from '@/views/main/skills.vue'
+import main_notebook from '@/views/main/notebook.vue'
+import notebook_params from '@/views/params/notebook/index.vue'
 import NotFound from '@/views/error/404.vue'
 
 const routes = [
@@ -48,6 +50,7 @@ const routes = [
       { path: '', name: 'home', component: main_home },
       { path: 'about', name: 'about', component: main_about },
       { path: 'skills', name: 'skills_home', component: main_skills },
+      { path: 'notebook', name: 'notebook', component: main_notebook },
     ],
   },
 
@@ -94,6 +97,7 @@ const routes = [
       { path: 'typeskills/:id/edit', name: 'typeskill_edit', component: typeskill_create, props: true },
 
       { path: 'about', name: 'about_params', component: about_params },
+      { path: 'notebook', name: 'notebook_params', component: notebook_params },
 
       { path: 'stickers', name: 'stickers', component: stickers },
       { path: 'stickers/create', name: 'sticker_create', component: sticker_create },

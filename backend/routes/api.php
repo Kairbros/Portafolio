@@ -11,6 +11,7 @@ use App\Http\Controllers\TypeSkillController;
 use App\Http\Controllers\SkillsController;
 use App\Http\Controllers\StickerController;
 use App\Http\Controllers\AboutController;
+use App\Http\Controllers\DrawingController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -28,6 +29,10 @@ Route::get('/typeskill', [TypeSkillController::class, 'index']);
 Route::get('/skills', [SkillsController::class, 'index']);
 Route::get('/stickers', [StickerController::class, 'index']);
 Route::get('/about', [AboutController::class, 'show']);
+Route::get('/drawings', [DrawingController::class, 'index']);
+
+// cualquiera puede dejar un dibujo: 5 cada 10 minutos por persona
+Route::post('/drawings', [DrawingController::class, 'store'])->middleware('throttle:5,10');
 
 // escritura: basic auth con las credenciales del .env
 Route::middleware('admin')->group(function () {
@@ -63,4 +68,11 @@ Route::middleware('admin')->group(function () {
     Route::delete('/stickers/{id}', [StickerController::class, 'delete']);
 
     Route::put('/about', [AboutController::class, 'update']);
+
+    Route::get('/admin/drawings/pending', [DrawingController::class, 'pending']);
+    Route::post('/drawing-pages', [DrawingController::class, 'add_page']);
+    Route::delete('/drawing-pages/{id}', [DrawingController::class, 'delete_page']);
+    Route::put('/drawings/{id}/place', [DrawingController::class, 'place']);
+    Route::put('/drawings/{id}/unplace', [DrawingController::class, 'unplace']);
+    Route::delete('/drawings/{id}', [DrawingController::class, 'delete']);
 });
