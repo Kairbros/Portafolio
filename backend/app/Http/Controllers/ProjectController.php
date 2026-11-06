@@ -62,7 +62,8 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|min:3',
             'type' => 'required|integer|exists:type_projects,id',
-            'description' => 'required|string|max:1024'
+            'description' => 'required|string|max:1024',
+            'description_en' => 'nullable|string|max:1024',
         ], [
             'name.min'      => 'El nombre del proyecto debe tener al menos :min caracteres.',
             'name.required' => 'El nombre del proyecto es obligatorio.',
@@ -100,6 +101,7 @@ class ProjectController extends Controller
                 $project = $this->project_repository->save_item([
                     'name' => $validated['name'],
                     'description' => $validated['description'],
+                    'description_en' => $validated['description_en'] ?? null,
                     'type_project_id' => $type->id,
                     'folder' => 'default',
                 ]);
@@ -164,6 +166,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|min:3',
             'description' => 'required|string|max:1024',
+            'description_en' => 'nullable|string|max:1024',
         ], [
             'name.min'      => 'El nombre del proyecto debe tener al menos :min caracteres.',
             'name.required' => 'El nombre del proyecto es obligatorio.',
@@ -205,6 +208,7 @@ class ProjectController extends Controller
             $data = [
                 'name' => $validated['name'],
                 'description' => $validated['description'],
+                'description_en' => $validated['description_en'] ?? null,
             ];
 
             if ($has_url) {

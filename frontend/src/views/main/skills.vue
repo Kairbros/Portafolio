@@ -3,6 +3,10 @@ import { computed, onMounted } from 'vue'
 import { useSkillStore } from '@/stores/Store'
 import { track } from '@/composables/useLoader'
 import { fileUrl } from '@/utils/media'
+import { localized } from '@/i18n'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const skillStore = useSkillStore()
 
@@ -12,7 +16,7 @@ const groups = computed(() => {
     for (const skill of skillStore.skills ?? []) {
         const key = String(skill.type?.id ?? 'sin-tipo')
         if (!byType.has(key)) {
-            byType.set(key, { name: skill.type?.name ?? 'otras', skills: [] })
+            byType.set(key, { name: localized(skill.type, 'name') || t('skills.others'), skills: [] })
         }
         byType.get(key)!.skills.push(skill)
     }
@@ -33,10 +37,10 @@ onMounted(() => track(skillStore.ensureSkills()))
 
 <template>
     <div class="skills">
-        <h1 class="dd-title skills__title">skills</h1>
+        <h1 class="dd-title skills__title">{{ t('skills.title') }}</h1>
 
         <p v-if="skillStore.error" class="dd-state dd-state--bad">
-            no se pudo leer
+            {{ t('state.error') }}
             <span class="dd-state__detail">{{ skillStore.error }}</span>
         </p>
 
@@ -57,7 +61,7 @@ onMounted(() => track(skillStore.ensureSkills()))
 
                         <span class="skill-row__name">{{ skill.name }}</span>
 
-                        <span class="skill-row__pips" role="img" :aria-label="`${level(skill.mastery)} de 10`">
+                        <span class="skill-row__pips" role="img" :aria-label="t('skills.level', { n: level(skill.mastery) })">
                             <span
                                 v-for="i in 10"
                                 :key="i"
@@ -70,7 +74,7 @@ onMounted(() => track(skillStore.ensureSkills()))
             </section>
         </div>
 
-        <p v-else-if="skillStore.loaded" class="dd-state">todavía no hay nada</p>
+        <p v-else-if="skillStore.loaded" class="dd-state">{{ t('state.empty') }}</p>
     </div>
 </template>
 

@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTypeSkillStore } from '@/stores/Store'
 import { track } from '@/composables/useLoader'
+import LangField from '@/components/flash/LangField.vue'
 
 const props = defineProps<{ id?: string }>()
 
@@ -10,6 +11,7 @@ const router = useRouter()
 const store = useTypeSkillStore()
 
 const name = ref('')
+const nameEn = ref('')
 const missing = ref(false)
 const sending = ref(false)
 const message = ref('')
@@ -25,6 +27,7 @@ onMounted(async () => {
         return
     }
     name.value = item.name ?? ''
+    nameEn.value = item.name_en ?? ''
 })
 
 async function save() {
@@ -33,7 +36,7 @@ async function save() {
     failed.value = false
     errors.value = {}
 
-    const payload = { name: name.value }
+    const payload = { name: name.value, name_en: nameEn.value }
     const res = props.id
         ? await store.updateTypeSkill(props.id, payload)
         : await store.storeTypeSkill(payload)
@@ -61,11 +64,15 @@ async function save() {
             <h1 class="dd-win__bar">{{ id ? 'editar tipo de skill' : 'nuevo tipo de skill' }}</h1>
 
             <div class="dd-form__fields">
-                <div class="dd-field">
-                    <label class="dd-field__label" for="ts-name">nombre</label>
-                    <input id="ts-name" v-model="name" type="text" class="dd-input" placeholder="lenguajes" autocomplete="off">
-                    <span v-if="errors.name" class="dd-field__error">{{ errors.name[0] }}</span>
-                </div>
+                <LangField
+                    id="ts-name"
+                    v-model="name"
+                    v-model:en="nameEn"
+                    label="nombre"
+                    placeholder="lenguajes"
+                    :error="errors.name?.[0]"
+                    :error-en="errors.name_en?.[0]"
+                />
             </div>
 
             <div class="dd-form__foot">

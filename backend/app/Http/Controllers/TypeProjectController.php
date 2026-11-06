@@ -46,6 +46,8 @@ class TypeProjectController extends Controller
             'name' => 'required|string|max:255|min:2',
             'description' => 'required|string|max:255',
             'extension' => 'nullable|string|max:255',
+            'name_en' => 'nullable|string|max:255',
+            'description_en' => 'nullable|string|max:255',
         ], [
             'name.min'      => 'El nombre del proyecto debe tener al menos :min caracteres.',
             'name.required' => 'El nombre del proyecto es obligatorio.',
@@ -68,6 +70,8 @@ class TypeProjectController extends Controller
             'name' => 'required|string|max:255|min:2',
             'description' => 'required|string|max:255',
             'extension' => 'nullable|string|max:255',
+            'name_en' => 'nullable|string|max:255',
+            'description_en' => 'nullable|string|max:255',
         ], [
             'name.min'      => 'El nombre debe tener al menos :min caracteres.',
             'name.required' => 'El nombre es obligatorio.',

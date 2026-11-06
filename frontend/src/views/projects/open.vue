@@ -5,6 +5,10 @@ import { track } from '@/composables/useLoader'
 import { coverUrl, fileUrl, isExternal, isImage, isPage } from '@/utils/media'
 import PhotoZoom from '@/components/flash/PhotoZoom.vue'
 import GameStage from '@/components/ui/GameStage.vue'
+import { localized } from '@/i18n'
+import { useI18n } from 'vue-i18n'
+
+const { t, locale } = useI18n()
 
 const props = defineProps({
     id: { type: String, default: '' },
@@ -34,7 +38,7 @@ const isBuild = computed(() => !isLink.value && isPage(source.value))
 const isEmbed = computed(() => isLink.value || isBuild.value)
 const isPicture = computed(() => !isEmbed.value && isImage(source.value) && !imageFailed.value)
 
-const typeName = computed(() => props.type?.name ?? (project.value as any)?.type?.name ?? 'proyectos')
+const typeName = computed(() => localized(props.type ?? (project.value as any)?.type, 'name') || t('projects.title'))
 
 const published = computed(() => {
     const raw = (project.value as any)?.created_at
@@ -43,7 +47,7 @@ const published = computed(() => {
     const date = new Date(raw)
     return Number.isNaN(date.getTime())
         ? ''
-        : new Intl.DateTimeFormat('es', { day: 'numeric', month: 'long', year: 'numeric' }).format(date)
+        : new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'long', year: 'numeric' }).format(date)
 })
 
 const folder = computed(() => ({ name: 'projects_type', params: { typeId: props.typeId } }))
@@ -60,15 +64,15 @@ onUnmounted(() => {
 
 <template>
     <div>
-        <RouterLink class="dd-back" :to="folder">volver a {{ typeName }}</RouterLink>
+        <RouterLink class="dd-back" :to="folder">{{ t('projects.back', { name: typeName }) }}</RouterLink>
 
         <p v-if="done && !project" class="dd-state dd-state--bad">
-            no se encontró este proyecto
-            <span class="dd-state__detail">{{ projectStore.error || 'puede que se haya borrado o movido' }}</span>
+            {{ t('projects.notFound') }}
+            <span class="dd-state__detail">{{ projectStore.error || t('projects.notFoundHint') }}</span>
         </p>
 
         <article v-else-if="project" class="open">
-            <section class="dd-win" aria-label="Pantalla del proyecto">
+            <section class="dd-win" :aria-label="t('projects.screen')">
                 <div class="dd-win__bar"><span class="dd-win__title">{{ project.name }}</span></div>
 
                 <GameStage
@@ -91,31 +95,31 @@ onUnmounted(() => {
                     v-else-if="isPicture"
                     type="button"
                     class="open__zoom"
-                    :aria-label="`Ver ${project.name} en grande`"
+                    :aria-label="t('projects.viewBigOf', { name: project.name })"
                     @click="zoomed = true"
                 >
                     <img class="open__img" :src="src" :alt="project.name" @error="imageFailed = true">
                 </button>
 
-                <p v-else class="dd-state open__none">este archivo no se puede ver desde el navegador</p>
+                <p v-else class="dd-state open__none">{{ t('projects.cantView') }}</p>
             </section>
 
-            <section class="dd-win" aria-label="Datos del proyecto">
-                <div class="dd-win__bar">datos</div>
+            <section class="dd-win" :aria-label="t('projects.data')">
+                <div class="dd-win__bar">{{ t('projects.data') }}</div>
 
                 <div class="open__data">
                     <h1 class="dd-title open__name">{{ project.name }}</h1>
 
                     <dl class="open__props">
-                        <dt>tipo</dt>
+                        <dt>{{ t('projects.type') }}</dt>
                         <dd>{{ typeName }}</dd>
                         <template v-if="published">
-                            <dt>publicado</dt>
+                            <dt>{{ t('projects.published') }}</dt>
                             <dd>{{ published }}</dd>
                         </template>
                     </dl>
 
-                    <p v-if="project.description" class="open__desc">{{ project.description }}</p>
+                    <p v-if="localized(project, 'description')" class="open__desc">{{ localized(project, 'description') }}</p>
 
                     <div class="open__actions">
                         <button
@@ -124,7 +128,7 @@ onUnmounted(() => {
                             class="dd-btn dd-btn--tone"
                             @click="stage?.openTheater()"
                         >
-                            jugar en grande
+                            {{ t('projects.playBig') }}
                         </button>
 
                         <button
@@ -133,7 +137,7 @@ onUnmounted(() => {
                             class="dd-btn dd-btn--tone"
                             @click="zoomed = true"
                         >
-                            ver en grande
+                            {{ t('projects.viewBig') }}
                         </button>
 
                         <a
@@ -144,7 +148,7 @@ onUnmounted(() => {
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                            {{ isLink ? 'abrir la página' : 'abrir en otra pestaña' }}
+                            {{ isLink ? t('projects.openPage') : t('projects.openTab') }}
                         </a>
                     </div>
                 </div>

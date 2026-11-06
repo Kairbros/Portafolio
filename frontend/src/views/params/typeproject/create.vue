@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useTypeProjectStore } from '@/stores/Store'
 import { track } from '@/composables/useLoader'
 import TagInput from '@/components/ui/TagInput.vue'
+import LangField from '@/components/flash/LangField.vue'
 
 const props = defineProps<{ id?: string }>()
 
@@ -12,6 +13,8 @@ const store = useTypeProjectStore()
 
 const name = ref('')
 const description = ref('')
+const nameEn = ref('')
+const descriptionEn = ref('')
 const extensions = ref<string[]>([])
 const missing = ref(false)
 const sending = ref(false)
@@ -34,6 +37,8 @@ onMounted(async () => {
     }
     name.value = item.name ?? ''
     description.value = item.description ?? ''
+    nameEn.value = item.name_en ?? ''
+    descriptionEn.value = item.description_en ?? ''
     const raw = Array.isArray(item.extension) ? item.extension : String(item.extension ?? '').split(',')
     extensions.value = raw.map(normalizeExtension).filter(Boolean)
 })
@@ -47,6 +52,8 @@ async function save() {
     const payload = {
         name: name.value,
         description: description.value,
+        name_en: nameEn.value,
+        description_en: descriptionEn.value,
         extension: extensions.value.join(','),
     }
     const res = props.id
@@ -76,17 +83,24 @@ async function save() {
             <h1 class="dd-win__bar">{{ id ? 'editar tipo' : 'nuevo tipo' }}</h1>
 
             <div class="dd-form__fields">
-                <div class="dd-field">
-                    <label class="dd-field__label" for="t-name">nombre</label>
-                    <input id="t-name" v-model="name" type="text" class="dd-input" placeholder="juegos" autocomplete="off">
-                    <span v-if="errors.name" class="dd-field__error">{{ errors.name[0] }}</span>
-                </div>
+                <LangField
+                    id="t-name"
+                    v-model="name"
+                    v-model:en="nameEn"
+                    label="nombre"
+                    placeholder="juegos"
+                    :error="errors.name?.[0]"
+                    :error-en="errors.name_en?.[0]"
+                />
 
-                <div class="dd-field">
-                    <label class="dd-field__label" for="t-desc">descripción</label>
-                    <input id="t-desc" v-model="description" type="text" class="dd-input" autocomplete="off">
-                    <span v-if="errors.description" class="dd-field__error">{{ errors.description[0] }}</span>
-                </div>
+                <LangField
+                    id="t-desc"
+                    v-model="description"
+                    v-model:en="descriptionEn"
+                    label="descripción"
+                    :error="errors.description?.[0]"
+                    :error-en="errors.description_en?.[0]"
+                />
 
                 <div class="dd-field">
                     <label class="dd-field__label" for="t-ext">extensiones</label>

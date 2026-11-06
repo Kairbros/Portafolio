@@ -5,6 +5,9 @@ import { useMusic } from '@/composables/useMusic'
 import SpeakerOnIcon from '~icons/pixelarticons/volume-3'
 import SpeakerLowIcon from '~icons/pixelarticons/volume-1'
 import SpeakerOffIcon from '~icons/pixelarticons/volume-x'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const { muted, toggleMute } = useSfx()
 const { muted: musicMuted, volume, toggleMusic, setVolume } = useMusic()
@@ -63,22 +66,22 @@ onBeforeUnmount(() => {
       @click="open = !open"
     >
       <component :is="speaker" class="dd-sound__icon" aria-hidden="true" />
-      {{ allQuiet ? 'silencio' : 'sonido' }}
+      {{ allQuiet ? t('sound.off') : t('sound.on') }}
     </button>
 
     <section
       v-if="open"
       id="dd-sound-panel"
       class="dd-win dd-sound__panel"
-      aria-label="Controles de sonido"
+      :aria-label="t('sound.panel')"
     >
-      <div class="dd-win__bar">sonido</div>
+      <div class="dd-win__bar">{{ t('sound.title') }}</div>
 
       <div class="dd-sound__rows">
         <div class="dd-sound__row">
-          <span>música</span>
+          <span>{{ t('sound.music') }}</span>
           <button type="button" class="dd-switch" :aria-pressed="!musicMuted" @click="toggleMusic">
-            {{ musicMuted ? 'no' : 'sí' }}
+            {{ musicMuted ? t('sound.no') : t('sound.yes') }}
           </button>
         </div>
 
@@ -92,16 +95,16 @@ onBeforeUnmount(() => {
             :value="percent"
             :style="{ '--fill': `${percent}%` }"
             :disabled="musicMuted"
-            aria-label="Volumen de la música"
+            :aria-label="t('sound.volume')"
             @input="onVolume"
           >
           <span class="dd-small">{{ percent }}</span>
         </div>
 
         <div class="dd-sound__row">
-          <span>efectos</span>
+          <span>{{ t('sound.effects') }}</span>
           <button type="button" class="dd-switch" :aria-pressed="!muted" @click="toggleMute">
-            {{ muted ? 'no' : 'sí' }}
+            {{ muted ? t('sound.no') : t('sound.yes') }}
           </button>
         </div>
       </div>

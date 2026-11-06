@@ -1,8 +1,14 @@
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
+
 <template>
     <div class="lost">
-        <h1 class="dd-title">no encontrado</h1>
-        <p class="dd-lead">Esta página no existe, o ya no está aquí.</p>
-        <RouterLink class="dd-btn dd-btn--tone lost__back" to="/">volver al inicio</RouterLink>
+        <h1 class="dd-title">{{ t('notFound.title') }}</h1>
+        <p class="dd-lead">{{ t('notFound.lead') }}</p>
+        <RouterLink class="dd-btn dd-btn--tone lost__back" to="/">{{ t('notFound.back') }}</RouterLink>
     </div>
 </template>
 

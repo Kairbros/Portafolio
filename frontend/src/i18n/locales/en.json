@@ -1,0 +1,93 @@
+{
+  "lang": {
+    "label": "Language",
+    "es": "es",
+    "en": "en",
+    "esName": "spanish",
+    "enName": "english"
+  },
+  "nav": {
+    "sections": "Sections",
+    "home": "home",
+    "projects": "projects",
+    "about": "about me",
+    "skills": "skills",
+    "closed": "closed",
+    "closedHint": "not open yet",
+    "edit": "edit"
+  },
+  "loader": {
+    "label": "Loading",
+    "progress": "loading {n}"
+  },
+  "sound": {
+    "on": "sound",
+    "off": "muted",
+    "panel": "Sound controls",
+    "title": "sound",
+    "music": "music",
+    "volume": "Music volume",
+    "effects": "effects",
+    "yes": "on",
+    "no": "off"
+  },
+  "nowPlaying": {
+    "title": "now playing",
+    "untitled": "untitled",
+    "unknownArtist": "unknown artist"
+  },
+  "state": {
+    "error": "could not load",
+    "empty": "nothing here yet",
+    "emptyHere": "nothing here yet"
+  },
+  "home": {
+    "portrait": "portrait",
+    "title": "i like to play",
+    "lead": "I draw, write stories and make video games. This is where I keep what I finish.",
+    "news": "latest"
+  },
+  "about": {
+    "title": "about me",
+    "drawings": "drawings"
+  },
+  "skills": {
+    "title": "skills",
+    "others": "other",
+    "level": "{n} of 10"
+  },
+  "projects": {
+    "title": "projects",
+    "types": "Project types",
+    "file": "file",
+    "back": "back to {name}",
+    "notFound": "this project was not found",
+    "notFoundHint": "it may have been deleted or moved",
+    "screen": "Project screen",
+    "data": "details",
+    "type": "type",
+    "published": "published",
+    "cantView": "this file can't be opened in the browser",
+    "playBig": "play full size",
+    "viewBig": "view full size",
+    "viewBigOf": "View {name} full size",
+    "openPage": "open the page",
+    "openTab": "open in a new tab"
+  },
+  "player": {
+    "play": "play",
+    "loading": "loading",
+    "fullscreen": "fullscreen",
+    "restart": "restart",
+    "exit": "exit",
+    "close": "close"
+  },
+  "zoom": {
+    "close": "close"
+  },
+  "notFound": {
+    "title": "not found",
+    "lead": "This page doesn't exist, or it isn't here anymore.",
+    "back": "back to home"
+  }
+}

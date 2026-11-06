@@ -3,6 +3,10 @@ import { computed, onMounted } from 'vue'
 import { useProjectStore } from '@/stores/Store'
 import { track } from '@/composables/useLoader'
 import { coverUrl } from '@/utils/media'
+import { localized } from '@/i18n'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
     type: { type: Object, default: null },
@@ -28,10 +32,10 @@ onMounted(() => track(projectStore.ensureProjects()))
 
 <template>
     <div v-if="typeId">
-        <p v-if="type?.description" class="dd-lead type__intro">{{ type.description }}</p>
+        <p v-if="localized(type, 'description')" class="dd-lead type__intro">{{ localized(type, 'description') }}</p>
 
         <p v-if="projectStore.error" class="dd-state dd-state--bad">
-            no se pudo leer
+            {{ t('state.error') }}
             <span class="dd-state__detail">{{ projectStore.error }}</span>
         </p>
 
@@ -46,14 +50,14 @@ onMounted(() => track(projectStore.ensureProjects()))
                             alt=""
                             loading="lazy"
                         >
-                        <span v-else>{{ extension || 'archivo' }}</span>
+                        <span v-else>{{ extension || t('projects.file') }}</span>
                     </span>
                     <span class="dd-card__name">{{ project.name }}</span>
                 </RouterLink>
             </li>
         </ul>
 
-        <p v-else-if="projectStore.loaded" class="dd-state">todavía no hay nada aquí</p>
+        <p v-else-if="projectStore.loaded" class="dd-state">{{ t('state.emptyHere') }}</p>
     </div>
 </template>
 

@@ -173,24 +173,6 @@
 }
 
 /* lápiz solo, con área de toque cómoda */
-.dd-nav__out .dd-nav__edit {
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin: 6px 0 0 -7px;
-  color: var(--dd-dust);
-}
-
-.dd-nav__out .dd-nav__edit .dd-nav__icon {
-  width: 16px;
-  height: 16px;
-}
-
-.dd-nav__out .dd-nav__edit:hover,
-.dd-nav__out .dd-nav__edit:focus-visible {
-  color: var(--dd-lilac);
-}
-
 /* ---------- Ventanas ---------- */
 
 .dd-win {
@@ -451,6 +433,38 @@
 
 .dd-sound {
   position: relative;
+}
+
+.dd-head__tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dd-lang {
+  display: flex;
+  height: 32px;
+  border: 1px solid var(--dd-line);
+}
+
+.dd-lang__btn {
+  padding: 0 10px;
+  font-family: var(--dd-pixel);
+  font-size: 11px;
+  color: var(--dd-dust);
+}
+
+.dd-lang__btn + .dd-lang__btn {
+  border-left: 1px solid var(--dd-line);
+}
+
+.dd-lang__btn:hover {
+  color: var(--dd-lilac);
+}
+
+.dd-lang__btn[aria-pressed='true'] {
+  color: var(--dd-bone);
+  background: var(--dd-hover);
 }
 
 .dd-sound__trigger {
@@ -807,10 +821,6 @@
     border-left: 1px solid var(--dd-line);
     font-size: 12px;
     white-space: nowrap;
-  }
-
-  .dd-nav__out .dd-nav__edit {
-    margin-top: 0;
   }
 
   .dd-grid {

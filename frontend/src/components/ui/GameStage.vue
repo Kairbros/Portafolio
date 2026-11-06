@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 withDefaults(defineProps<{
   src: string
@@ -89,7 +92,7 @@ defineExpose({ openTheater })
         <img v-if="poster" class="dd-player__poster" :src="poster" alt="" loading="lazy">
 
         <div class="dd-player__cover">
-          <button type="button" class="dd-btn dd-btn--big" @click="play">jugar</button>
+          <button type="button" class="dd-btn dd-btn--big" @click="play">{{ t('player.play') }}</button>
         </div>
       </template>
 
@@ -105,14 +108,14 @@ defineExpose({ openTheater })
           @load="ready = true"
         />
 
-        <p v-if="!ready" class="dd-player__booting">cargando</p>
+        <p v-if="!ready" class="dd-player__booting">{{ t('player.loading') }}</p>
       </template>
     </div>
 
     <div v-if="playing" class="dd-player__hud">
-      <button type="button" class="dd-btn" @click="fullscreen">pantalla completa</button>
-      <button type="button" class="dd-btn" @click="restart">reiniciar</button>
-      <button type="button" class="dd-btn" @click="stop">salir</button>
+      <button type="button" class="dd-btn" @click="fullscreen">{{ t('player.fullscreen') }}</button>
+      <button type="button" class="dd-btn" @click="restart">{{ t('player.restart') }}</button>
+      <button type="button" class="dd-btn" @click="stop">{{ t('player.exit') }}</button>
     </div>
   </div>
 
@@ -128,9 +131,9 @@ defineExpose({ openTheater })
       <div class="dd-win dd-modal__win dd-modal__win--wide">
         <div class="dd-win__bar">
           <span class="dd-win__title">{{ title }}</span>
-          <button type="button" class="dd-modal__action" @click="fullscreen">pantalla completa</button>
-          <button type="button" class="dd-modal__action" @click="restart">reiniciar</button>
-          <button type="button" class="dd-modal__action" @click="stop">cerrar</button>
+          <button type="button" class="dd-modal__action" @click="fullscreen">{{ t('player.fullscreen') }}</button>
+          <button type="button" class="dd-modal__action" @click="restart">{{ t('player.restart') }}</button>
+          <button type="button" class="dd-modal__action" @click="stop">{{ t('player.close') }}</button>
         </div>
 
         <div ref="theaterBoard" class="dd-modal__board">
@@ -145,7 +148,7 @@ defineExpose({ openTheater })
             @load="ready = true"
           />
 
-          <p v-if="!ready" class="dd-player__booting">cargando</p>
+          <p v-if="!ready" class="dd-player__booting">{{ t('player.loading') }}</p>
         </div>
       </div>
     </div>

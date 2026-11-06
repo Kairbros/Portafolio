@@ -6,6 +6,10 @@ import { useImageRotator } from '@/composables/useImageRotator'
 import { track } from '@/composables/useLoader'
 import { fileUrl } from '@/utils/media'
 import { projectTypeId } from '@/utils/project'
+import { localized } from '@/i18n'
+import { useI18n } from 'vue-i18n'
+
+const { t, locale } = useI18n()
 
 const PORTRAIT_MS = 15_000
 const LATEST = 5
@@ -25,11 +29,10 @@ const latest = computed(() =>
         .slice(0, LATEST),
 )
 
-const dateFormat = new Intl.DateTimeFormat('es', { day: '2-digit', month: '2-digit', year: 'numeric' })
-
 function shortDate(raw: string | null | undefined) {
     const date = new Date(raw ?? '')
-    return Number.isNaN(date.getTime()) ? '' : dateFormat.format(date)
+    if (Number.isNaN(date.getTime())) return ''
+    return new Intl.DateTimeFormat(locale.value, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
 }
 
 onMounted(() => {
@@ -40,8 +43,8 @@ onMounted(() => {
 
 <template>
     <div class="home">
-        <section class="dd-win home__portrait" aria-label="Retrato">
-            <div class="dd-win__bar">retrato</div>
+        <section class="dd-win home__portrait" :aria-label="t('home.portrait')">
+            <div class="dd-win__bar">{{ t('home.portrait') }}</div>
             <div class="home__frame dd-scan">
                 <div
                     v-for="(url, index) in portraitLayers"
@@ -55,15 +58,15 @@ onMounted(() => {
 
         <div class="home__side">
             <div class="home__intro">
-                <h1 class="dd-title">me gusta jugar</h1>
-                <p class="dd-lead">Dibujo, escribo historias y hago videojuegos. Aquí guardo lo que voy terminando.</p>
+                <h1 class="dd-title">{{ t('home.title') }}</h1>
+                <p class="dd-lead">{{ t('home.lead') }}</p>
             </div>
 
-            <section class="dd-win" aria-label="Novedades">
-                <div class="dd-win__bar">novedades</div>
+            <section class="dd-win" :aria-label="t('home.news')">
+                <div class="dd-win__bar">{{ t('home.news') }}</div>
 
                 <p v-if="projectStore.error" class="dd-state dd-state--bad home__state">
-                    no se pudo leer
+                    {{ t('state.error') }}
                     <span class="dd-state__detail">{{ projectStore.error }}</span>
                 </p>
 
@@ -75,12 +78,12 @@ onMounted(() => {
                         >
                             <span class="home__date">{{ shortDate(project.created_at) }}</span>
                             <span class="home__name">{{ project.name }}</span>
-                            <span class="home__type">{{ project.type?.name }}</span>
+                            <span class="home__type">{{ localized(project.type, 'name') }}</span>
                         </RouterLink>
                     </li>
                 </ul>
 
-                <p v-else-if="projectStore.loaded" class="dd-state home__state">todavía no hay nada</p>
+                <p v-else-if="projectStore.loaded" class="dd-state home__state">{{ t('state.empty') }}</p>
             </section>
         </div>
     </div>

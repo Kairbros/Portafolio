@@ -474,3 +474,43 @@ export const useStickerStore = defineStore('stickers', {
         }
     },
 })
+
+export const useAboutStore = defineStore('about', {
+    state: () => ({
+        body: '',
+        body_en: '',
+        loaded: false,
+        error: '' as string,
+    }),
+
+    actions: {
+        async getAbout() {
+            this.error = ''
+            try {
+                const res = await axios.get(`${api_url}/about`)
+                this.body = res.data?.body ?? ''
+                this.body_en = res.data?.body_en ?? ''
+                this.loaded = true
+            } catch (error) {
+                this.error = readError(error).message
+            }
+        },
+
+        async ensureAbout() {
+            if (this.loaded) return
+            await this.getAbout()
+        },
+
+        async updateAbout(body: string, body_en: string) {
+            try {
+                const res = await axios.put(`${api_url}/about`, { body, body_en })
+                this.body = res.data?.body ?? body
+                this.body_en = res.data?.body_en ?? body_en
+                this.loaded = true
+                return { ok: true as const, data: res.data }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
+        },
+    },
+})

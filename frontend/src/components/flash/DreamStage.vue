@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import AudioDeck from '@/components/ui/AudioDeck.vue'
+import LangSwitch from '@/components/flash/LangSwitch.vue'
 import { useLoader } from '@/composables/useLoader'
 import { isAdmin, signOut } from '@/utils/admin'
 import GithubIcon from '~icons/simple-icons/github'
@@ -14,12 +16,14 @@ const props = withDefaults(defineProps<{ admin?: boolean }>(), { admin: false })
 
 type Item = { key: string; label: string; to: string; tone: string; exact?: boolean }
 
-const publicSections: Item[] = [
-    { key: 'home', label: 'inicio', to: '/', tone: 'var(--dd-home)', exact: true },
-    { key: 'projects', label: 'proyectos', to: '/projects', tone: 'var(--dd-projects)' },
-    { key: 'about', label: 'sobre mí', to: '/about', tone: 'var(--dd-about)' },
-    { key: 'skills', label: 'skills', to: '/skills', tone: 'var(--dd-skills)' },
-]
+const { t } = useI18n()
+
+const publicSections = computed<Item[]>(() => [
+    { key: 'home', label: t('nav.home'), to: '/', tone: 'var(--dd-home)', exact: true },
+    { key: 'projects', label: t('nav.projects'), to: '/projects', tone: 'var(--dd-projects)' },
+    { key: 'about', label: t('nav.about'), to: '/about', tone: 'var(--dd-about)' },
+    { key: 'skills', label: t('nav.skills'), to: '/skills', tone: 'var(--dd-skills)' },
+])
 
 const adminSections: Item[] = [
     { key: 'projects', label: 'proyectos', to: '/params/projects' },
@@ -29,6 +33,7 @@ const adminSections: Item[] = [
     { key: 'music', label: 'música', to: '/params/musictrack' },
     { key: 'skills', label: 'skills', to: '/params/skills' },
     { key: 'typeskills', label: 'tipos de skill', to: '/params/typeskills' },
+    { key: 'about', label: 'sobre mí', to: '/params/about' },
     { key: 'stickers', label: 'stickers', to: '/params/stickers' },
 ].map((item) => ({ ...item, tone: 'var(--dd-bone)' }))
 
@@ -41,7 +46,7 @@ const route = useRoute()
 const { visible: loading, progress } = useLoader()
 
 const sections = computed(() => {
-    if (!props.admin) return publicSections
+    if (!props.admin) return publicSections.value
     return isAdmin.value ? adminSections : []
 })
 
@@ -65,11 +70,14 @@ const tone = computed(() => {
                 <RouterLink class="dd-brand" :to="admin ? '/params' : '/'">
                     dream diary<span v-if="admin" class="dd-brand__mode"> edición</span>
                 </RouterLink>
-                <AudioDeck />
+                <div class="dd-head__tools">
+                    <LangSwitch v-if="!admin" />
+                    <AudioDeck />
+                </div>
             </header>
 
             <div class="dd-body">
-                <nav class="dd-nav" aria-label="Secciones">
+                <nav class="dd-nav" :aria-label="t('nav.sections')">
                     <ul class="dd-nav__list">
                         <li v-for="item in sections" :key="item.key">
                             <RouterLink
@@ -87,7 +95,7 @@ const tone = computed(() => {
                             </RouterLink>
                         </li>
                         <li v-if="!admin">
-                            <span class="dd-nav__closed" aria-disabled="true" title="todavía no abre">cerrado</span>
+                            <span class="dd-nav__closed" aria-disabled="true" :title="t('nav.closedHint')">{{ t('nav.closed') }}</span>
                         </li>
                     </ul>
 
@@ -114,9 +122,10 @@ const tone = computed(() => {
                             </a>
                         </li>
                         <li>
-                            <RouterLink class="dd-nav__edit" to="/params" aria-label="Editar" title="editar">
+                             <RouterLink to="/params">
                                 <PencilIcon class="dd-nav__icon" aria-hidden="true" />
-                            </RouterLink>
+                                {{ t('nav.edit') }}
+                           </RouterLink>
                         </li>
                     </ul>
                 </nav>
@@ -130,7 +139,7 @@ const tone = computed(() => {
                 v-if="loading"
                 class="dd-loader"
                 role="progressbar"
-                aria-label="Cargando"
+                :aria-label="t('loader.label')"
                 aria-valuemin="0"
                 aria-valuemax="100"
                 :aria-valuenow="progress"
@@ -140,7 +149,7 @@ const tone = computed(() => {
                     <div class="dd-loader__bar">
                         <div class="dd-loader__fill" :style="{ width: `${progress}%` }"></div>
                     </div>
-                    <span class="dd-loader__label">cargando {{ progress }}</span>
+                    <span class="dd-loader__label">{{ t('loader.progress', { n: progress }) }}</span>
                 </div>
             </div>
         </div>

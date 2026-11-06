@@ -1,0 +1,93 @@
+{
+  "lang": {
+    "label": "Idioma",
+    "es": "es",
+    "en": "en",
+    "esName": "español",
+    "enName": "inglés"
+  },
+  "nav": {
+    "sections": "Secciones",
+    "home": "inicio",
+    "projects": "proyectos",
+    "about": "sobre mí",
+    "skills": "skills",
+    "closed": "cerrado",
+    "closedHint": "todavía no abre",
+    "edit": "editar"
+  },
+  "loader": {
+    "label": "Cargando",
+    "progress": "cargando {n}"
+  },
+  "sound": {
+    "on": "sonido",
+    "off": "silencio",
+    "panel": "Controles de sonido",
+    "title": "sonido",
+    "music": "música",
+    "volume": "Volumen de la música",
+    "effects": "efectos",
+    "yes": "sí",
+    "no": "no"
+  },
+  "nowPlaying": {
+    "title": "sonando",
+    "untitled": "sin título",
+    "unknownArtist": "artista desconocido"
+  },
+  "state": {
+    "error": "no se pudo leer",
+    "empty": "todavía no hay nada",
+    "emptyHere": "todavía no hay nada aquí"
+  },
+  "home": {
+    "portrait": "retrato",
+    "title": "me gusta jugar",
+    "lead": "Dibujo, escribo historias y hago videojuegos. Aquí guardo lo que voy terminando.",
+    "news": "novedades"
+  },
+  "about": {
+    "title": "sobre mí",
+    "drawings": "dibujos"
+  },
+  "skills": {
+    "title": "skills",
+    "others": "otras",
+    "level": "{n} de 10"
+  },
+  "projects": {
+    "title": "proyectos",
+    "types": "Tipos de proyecto",
+    "file": "archivo",
+    "back": "volver a {name}",
+    "notFound": "no se encontró este proyecto",
+    "notFoundHint": "puede que se haya borrado o movido",
+    "screen": "Pantalla del proyecto",
+    "data": "datos",
+    "type": "tipo",
+    "published": "publicado",
+    "cantView": "este archivo no se puede ver desde el navegador",
+    "playBig": "jugar en grande",
+    "viewBig": "ver en grande",
+    "viewBigOf": "Ver {name} en grande",
+    "openPage": "abrir la página",
+    "openTab": "abrir en otra pestaña"
+  },
+  "player": {
+    "play": "jugar",
+    "loading": "cargando",
+    "fullscreen": "pantalla completa",
+    "restart": "reiniciar",
+    "exit": "salir",
+    "close": "cerrar"
+  },
+  "zoom": {
+    "close": "cerrar"
+  },
+  "notFound": {
+    "title": "no encontrado",
+    "lead": "Esta página no existe, o ya no está aquí.",
+    "back": "volver al inicio"
+  }
+}

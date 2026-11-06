@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { useStickerStore } from '@/stores/Store'
+import { useAboutStore, useStickerStore } from '@/stores/Store'
 import { track } from '@/composables/useLoader'
 import { fileUrl } from '@/utils/media'
+import { localized } from '@/i18n'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const stickerStore = useStickerStore()
+const aboutStore = useAboutStore()
 
 // posiciones fijas del collage; si hay más stickers se repiten
 const SPOTS = [
@@ -33,41 +38,34 @@ const stickers = computed(() =>
         .filter((s) => s.src),
 )
 
-onMounted(() => track(stickerStore.ensureStickers()))
+// un párrafo por cada bloque separado por una línea vacía
+const paragraphs = computed(() =>
+    localized(aboutStore, 'body')
+        .split(/\n\s*\n/)
+        .map((p) => p.trim())
+        .filter(Boolean),
+)
+
+onMounted(() => track(Promise.all([aboutStore.ensureAbout(), stickerStore.ensureStickers()])))
 </script>
 
 <template>
     <article class="about">
         <div class="about__text">
-            <h1 class="dd-title">sobre mí</h1>
+            <h1 class="dd-title">{{ t('about.title') }}</h1>
 
-            <div class="dd-prose">
-                <p>
-                    Me gusta dibujar, hacer videojuegos y pasar demasiado tiempo
-                    intentando convertir las ideas de mi cabeza en cosas
-                    que realmente funcionen.
-                </p>
-                <p>
-                    Siempre me han gustado los videojuegos, especialmente aquellos
-                    que tienen algo que contar. De ahí empecé a escribir mis propias
-                    historias, crear personajes y, eventualmente, aprender a programar
-                    para poder hacerlos realidad.
-                </p>
-                <p>
-                    También soy bastante curioso con cómo están hechas las cosas.
-                    Empecé queriendo entender cómo funcionaban las computadoras y sus
-                    programas, y terminé aprendiendo un poco de todo por el camino.
-                </p>
-                <p>
-                    Ahora me gusta mezclar todas esas cosas: dibujar un personaje,
-                    pensar en su historia, imaginar el mundo en el que vive y luego
-                    intentar convertir todo eso en un juego.
-                </p>
+            <p v-if="aboutStore.error" class="dd-state dd-state--bad">
+                {{ t('state.error') }}
+                <span class="dd-state__detail">{{ aboutStore.error }}</span>
+            </p>
+
+            <div v-else class="dd-prose">
+                <p v-for="(paragraph, i) in paragraphs" :key="i">{{ paragraph }}</p>
             </div>
         </div>
 
-        <section v-if="stickers.length" class="dd-win about__board" aria-label="Dibujos">
-            <div class="dd-win__bar">dibujos</div>
+        <section v-if="stickers.length" class="dd-win about__board" :aria-label="t('about.drawings')">
+            <div class="dd-win__bar">{{ t('about.drawings') }}</div>
             <div class="about__collage">
                 <img
                     v-for="sticker in stickers"

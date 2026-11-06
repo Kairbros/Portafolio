@@ -44,6 +44,7 @@ class TypeSkillController extends Controller
     {   
         $data = $request->validate([
             'name' => 'required|string|max:255|min:2',
+            'name_en' => 'nullable|string|max:255',
         ], [
             'name.min'      => 'El nombre del skill debe tener al menos :min caracteres.',
             'name.required' => 'El nombre del skill es obligatorio.',
@@ -62,6 +63,7 @@ class TypeSkillController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255|min:2',
+            'name_en' => 'nullable|string|max:255',
         ], [
             'name.min'      => 'El nombre debe tener al menos :min caracteres.',
             'name.required' => 'El nombre es obligatorio.',

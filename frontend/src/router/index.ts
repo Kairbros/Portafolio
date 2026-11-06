@@ -32,6 +32,8 @@ import typeskill_create from '@/views/params/typeskill/create.vue'
 import stickers from '@/views/params/stickers/index.vue'
 import sticker_create from '@/views/params/stickers/create.vue'
 
+import about_params from '@/views/params/about/index.vue'
+
 import main_shell from '@/views/main/index.vue'
 import main_home from '@/views/main/home.vue'
 import main_about from '@/views/main/about.vue'
@@ -90,6 +92,8 @@ const routes = [
       { path: 'typeskills', name: 'typeskills', component: typeskill },
       { path: 'typeskills/create', name: 'typeskill_create', component: typeskill_create },
       { path: 'typeskills/:id/edit', name: 'typeskill_edit', component: typeskill_create, props: true },
+
+      { path: 'about', name: 'about_params', component: about_params },
 
       { path: 'stickers', name: 'stickers', component: stickers },
       { path: 'stickers/create', name: 'sticker_create', component: sticker_create },

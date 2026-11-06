@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -55,7 +58,7 @@ onBeforeUnmount(() => {
       <figure class="dd-win dd-modal__win">
         <figcaption class="dd-win__bar">
           <span class="dd-win__title">{{ title }}</span>
-          <button ref="closeButton" type="button" class="dd-modal__action" @click="close">cerrar</button>
+          <button ref="closeButton" type="button" class="dd-modal__action" @click="close">{{ t('zoom.close') }}</button>
         </figcaption>
 
         <img class="dd-modal__img" :src="src" :alt="alt">

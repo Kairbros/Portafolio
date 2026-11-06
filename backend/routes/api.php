@@ -10,6 +10,7 @@ use App\Http\Controllers\MusicTrackController;
 use App\Http\Controllers\TypeSkillController;
 use App\Http\Controllers\SkillsController;
 use App\Http\Controllers\StickerController;
+use App\Http\Controllers\AboutController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -26,6 +27,7 @@ Route::get('/musictrack', [MusicTrackController::class, 'index']);
 Route::get('/typeskill', [TypeSkillController::class, 'index']);
 Route::get('/skills', [SkillsController::class, 'index']);
 Route::get('/stickers', [StickerController::class, 'index']);
+Route::get('/about', [AboutController::class, 'show']);
 
 // escritura: basic auth con las credenciales del .env
 Route::middleware('admin')->group(function () {
@@ -59,4 +61,6 @@ Route::middleware('admin')->group(function () {
 
     Route::post('/stickers', [StickerController::class, 'store']);
     Route::delete('/stickers/{id}', [StickerController::class, 'delete']);
+
+    Route::put('/about', [AboutController::class, 'update']);
 });

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useProjectStore, useTypeProjectStore } from '@/stores/Store'
 import { track } from '@/composables/useLoader'
 import { coverUrl, isImage } from '@/utils/media'
+import LangField from '@/components/flash/LangField.vue'
 
 const props = defineProps<{ id?: string }>()
 
@@ -13,6 +14,7 @@ const typeStore = useTypeProjectStore()
 
 const name = ref('')
 const description = ref('')
+const descriptionEn = ref('')
 const selected = ref<string | number>('')
 const file = ref<File | null>(null)
 const cover = ref<File | null>(null)
@@ -87,6 +89,7 @@ onMounted(async () => {
     }
     name.value = item.name ?? ''
     description.value = item.description ?? ''
+    descriptionEn.value = item.description_en ?? ''
     selected.value = item.type_project_id ?? ''
     currentFolder.value = String(item.folder ?? '')
     currentCover.value = String(item.cover ?? '')
@@ -105,6 +108,7 @@ async function save() {
     data.append('name', name.value)
     if (!props.id) data.append('type', String(selected.value))
     data.append('description', description.value)
+    data.append('description_en', descriptionEn.value)
     if (isLink.value) data.append('url', url.value)
     else if (file.value) data.append('file', file.value)
     if (cover.value) data.append('cover', cover.value)
@@ -144,8 +148,8 @@ async function save() {
                     </select>
                     <span v-if="errors.type" class="dd-field__error">{{ errors.type[0] }}</span>
                     <span v-else-if="id" class="dd-field__hint">el tipo no se cambia</span>
-                    <span v-else-if="noTypes" class="dd-field__error">
-                        no hay tipos,
+                    <span v-else-if="noTypes" class="dd-field__hint">
+                        todavía no hay tipos,
                         <RouterLink :to="{ name: 'typeproject_create' }">crea uno</RouterLink>
                     </span>
                 </div>
@@ -156,11 +160,15 @@ async function save() {
                     <span v-if="errors.name" class="dd-field__error">{{ errors.name[0] }}</span>
                 </div>
 
-                <div class="dd-field">
-                    <label class="dd-field__label" for="p-description">descripción</label>
-                    <textarea id="p-description" v-model="description" class="dd-input" rows="3"></textarea>
-                    <span v-if="errors.description" class="dd-field__error">{{ errors.description[0] }}</span>
-                </div>
+                <LangField
+                    id="p-description"
+                    v-model="description"
+                    v-model:en="descriptionEn"
+                    label="descripción"
+                    multiline
+                    :error="errors.description?.[0]"
+                    :error-en="errors.description_en?.[0]"
+                />
 
                 <div v-if="isLink" class="dd-field">
                     <label class="dd-field__label" for="p-url">enlace</label>

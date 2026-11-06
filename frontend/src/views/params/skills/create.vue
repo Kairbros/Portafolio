@@ -102,8 +102,8 @@ async function save() {
                         <option v-for="type in types" :key="type.id" :value="type.id">{{ type.name }}</option>
                     </select>
                     <span v-if="errors.type" class="dd-field__error">{{ errors.type[0] }}</span>
-                    <span v-else-if="noTypes" class="dd-field__error">
-                        no hay tipos,
+                    <span v-else-if="noTypes" class="dd-field__hint">
+                        todavía no hay tipos,
                         <RouterLink :to="{ name: 'typeskill_create' }">crea uno</RouterLink>
                     </span>
                 </div>
