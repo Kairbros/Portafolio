@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use App\Http\Repositories\DrawingRepository;
 
 class DrawingController extends Controller
 {
+    private const MAX_COLORS = 35;
+
+    private const DEFAULT_COLORS = 24;
+
     function __construct(protected DrawingRepository $drawing_repository)
     {}
 
@@ -27,7 +32,9 @@ class DrawingController extends Controller
         $data = $request->validate([
             'name' => 'nullable|string|max:24',
             'comment' => 'nullable|string|max:140',
-            'pixels' => ['required', 'string', 'size:1024', 'regex:/^[0-9a-c]+$/', 'not_regex:/^0+$/'],
+            'pixels' => ['required', 'string', 'size:1024', 'regex:/^[0-9a-z]+$/', 'not_regex:/^0+$/'],
+            'colors' => 'nullable|array|max:' . self::MAX_COLORS,
+            'colors.*' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ], [
             'name.max' => 'El nombre no puede superar los :max caracteres.',
             'comment.max' => 'El comentario no puede superar los :max caracteres.',
@@ -35,7 +42,20 @@ class DrawingController extends Controller
             'pixels.size' => 'El dibujo no es válido.',
             'pixels.regex' => 'El dibujo no es válido.',
             'pixels.not_regex' => 'El dibujo está vacío.',
+            'colors.max' => 'El dibujo tiene demasiados colores.',
+            'colors.*.regex' => 'El dibujo no es válido.',
         ]);
+
+        if (isset($data['colors'])) {
+            $data['colors'] = array_map('strtolower', array_values($data['colors']));
+        }
+
+        $available = isset($data['colors']) ? count($data['colors']) : self::DEFAULT_COLORS;
+        $highest = max(array_map(fn (string $cell) => intval($cell, 36), str_split($data['pixels'])));
+
+        if ($highest > $available) {
+            throw ValidationException::withMessages(['pixels' => 'El dibujo no es válido.']);
+        }
 
         $this->drawing_repository->save_item($data);
 

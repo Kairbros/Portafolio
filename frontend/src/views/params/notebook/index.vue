@@ -118,7 +118,7 @@ onMounted(reload)
 
                 <ul v-if="store.pending.length" class="nb-queue">
                     <li v-for="d in store.pending" :key="d.id" class="nb-queue__item">
-                        <DrawingThumb class="nb-queue__img" :pixels="d.pixels" :size="64" />
+                        <DrawingThumb class="nb-queue__img" :pixels="d.pixels" :colors="d.colors" :size="64" />
                         <div class="nb-queue__text">
                             <span class="nb-queue__name">{{ nameOf(d) }}</span>
                             <span class="nb-queue__comment">{{ d.comment || 'sin comentario' }}</span>

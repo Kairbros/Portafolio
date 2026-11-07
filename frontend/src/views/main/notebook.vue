@@ -12,6 +12,7 @@ const { t, locale } = useI18n()
 const store = useDrawingStore()
 
 const pixels = ref('')
+const colors = ref<string[]>([])
 const name = ref('')
 const comment = ref('')
 const website = ref('')
@@ -51,6 +52,7 @@ async function send() {
         name: name.value.trim(),
         comment: comment.value.trim(),
         pixels: pixels.value,
+        colors: colors.value,
         website: website.value,
     })
     sending.value = false
@@ -61,6 +63,7 @@ async function send() {
     }
 
     pixels.value = ''
+    colors.value = []
     name.value = ''
     comment.value = ''
     sent.value = true
@@ -136,7 +139,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
                     </div>
 
                     <div class="nb__compose">
-                        <PixelEditor v-model="pixels" />
+                        <PixelEditor v-model="pixels" v-model:colors="colors" />
 
                         <form class="nb__fields" @submit.prevent="send">
                             <div class="dd-field">
@@ -178,7 +181,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
                         <button ref="viewClose" type="button" class="dd-modal__action" @click="close">{{ t('zoom.close') }}</button>
                     </div>
                     <div class="nb-view__body">
-                        <DrawingThumb class="nb-view__img" :pixels="opened.pixels" :size="320" />
+                        <DrawingThumb class="nb-view__img" :pixels="opened.pixels" :colors="opened.colors" :size="320" />
                         <p class="nb-view__comment">{{ opened.comment || t('notebook.noComment') }}</p>
                         <p class="dd-small">{{ fullDate(opened.created_at) }}</p>
                     </div>

@@ -149,7 +149,7 @@ function onClick(d: Drawing) {
             @click="onClick(d)"
             @keydown="onKey($event, d)"
         >
-            <DrawingThumb :pixels="d.pixels" />
+            <DrawingThumb :pixels="d.pixels" :colors="d.colors" />
             <span class="nb-card__name">{{ nameOf(d) }}</span>
 
             <span

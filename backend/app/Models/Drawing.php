@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Drawing extends Model
 {
     protected $table = 'drawings';
-    protected $fillable = ['name', 'comment', 'pixels', 'drawing_page_id', 'x', 'y', 'rotation', 'z'];
+    protected $fillable = ['name', 'comment', 'pixels', 'colors', 'drawing_page_id', 'x', 'y', 'rotation', 'z'];
 
     protected $casts = [
+        'colors' => 'array',
         'x' => 'float',
         'y' => 'float',
         'rotation' => 'float',

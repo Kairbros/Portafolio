@@ -9,6 +9,7 @@ export type Drawing = {
     name: string | null
     comment: string | null
     pixels: string
+    colors: string[] | null
     drawing_page_id: number | null
     x: number
     y: number
@@ -53,7 +54,7 @@ export const useDrawingStore = defineStore('drawings', {
             }
         },
 
-        async send(params: { name: string; comment: string; pixels: string; website: string }) {
+        async send(params: { name: string; comment: string; pixels: string; colors: string[]; website: string }) {
             try {
                 await axios.post(`${api_url}/drawings`, params)
                 return { ok: true as const }

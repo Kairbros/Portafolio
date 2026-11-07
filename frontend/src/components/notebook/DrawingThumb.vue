@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { decode, paint } from '@/utils/pixels'
+import { colorsOf, decode, paint } from '@/utils/pixels'
 
-const props = withDefaults(defineProps<{ pixels: string; size?: number }>(), { size: 96 })
+const props = withDefaults(defineProps<{ pixels: string; colors?: string[] | null; size?: number }>(), { size: 96, colors: null })
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 
 function render() {
-    if (canvas.value) paint(canvas.value, decode(props.pixels))
+    if (canvas.value) paint(canvas.value, decode(props.pixels), colorsOf(props.colors))
 }
 
 onMounted(render)
-watch(() => props.pixels, render)
+watch(() => [props.pixels, props.colors], render)
 </script>
 
 <template>
