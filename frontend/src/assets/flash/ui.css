@@ -733,7 +733,7 @@
 
 /* ---------- Pantallas chicas ---------- */
 
-@media (max-width: 1010px), (max-height: 640px) {
+@media (max-width: 1170px), (max-height: 750px) {
   .dd-shell {
     padding: 0;
     place-items: stretch;

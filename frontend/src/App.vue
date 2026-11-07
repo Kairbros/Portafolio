@@ -8,12 +8,14 @@ import DreamStage from '@/components/flash/DreamStage.vue';
 import { play } from '@/composables/useSfx';
 import { startMusic } from '@/composables/useMusic';
 import { useLocaleFor } from '@/i18n';
+import { usePageMeta } from '@/composables/usePageMeta';
 
 const route = useRoute()
 
 const admin = computed(() => route.path.startsWith('/params'))
 
 useLocaleFor(() => admin.value)
+usePageMeta()
 
 const CLICKABLE = 'a[href], button'
 

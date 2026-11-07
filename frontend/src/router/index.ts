@@ -48,14 +48,15 @@ const routes = [
     component: main_shell,
     children: [
       { path: '', name: 'home', component: main_home },
-      { path: 'about', name: 'about', component: main_about },
-      { path: 'skills', name: 'skills_home', component: main_skills },
-      { path: 'notebook', name: 'notebook', component: main_notebook },
+      { path: 'about', name: 'about', component: main_about, meta: { title: 'nav.about' } },
+      { path: 'skills', name: 'skills_home', component: main_skills, meta: { title: 'nav.skills' } },
+      { path: 'notebook', name: 'notebook', component: main_notebook, meta: { title: 'nav.notebook' } },
     ],
   },
 
   {
     path: '/projects',
+    meta: { title: 'nav.projects' },
     component: projects_shell,
     children: [
       { path: '', name: 'projects_home', component: projects_type, props: true },
@@ -66,6 +67,7 @@ const routes = [
 
   {
     path: '/params',
+    meta: { title: 'nav.edit', noindex: true },
     component: params,
     children: [
       { path: '', redirect: '/params/projects' },
@@ -104,7 +106,7 @@ const routes = [
     ],
   },
 
-  { path: '/:pathMatch(.*)*', component: NotFound },
+  { path: '/:pathMatch(.*)*', component: NotFound, meta: { title: 'notFound.title', noindex: true } },
 ]
 
 const router = createRouter({

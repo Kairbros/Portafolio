@@ -64,8 +64,8 @@ onMounted(() => track(Promise.all([aboutStore.ensureAbout(), stickerStore.ensure
             </div>
         </div>
 
-        <section v-if="stickers.length" class="dd-win about__board" :aria-label="t('about.drawings')">
-            <div class="dd-win__bar">{{ t('about.drawings') }}</div>
+        <section v-if="stickers.length" class="dd-win about__board" :aria-label="t('about.stickers')">
+            <div class="dd-win__bar">{{ t('about.stickers') }}</div>
             <div class="about__collage">
                 <img
                     v-for="sticker in stickers"

@@ -40,7 +40,7 @@ const adminSections: Item[] = [
 ].map((item) => ({ ...item, tone: 'var(--dd-bone)' }))
 
 const elsewhere = [
-    { label: 'github', href: 'https://github.com/Kairbros', icon: GithubIcon },
+    { label: 'kairbros', title: 'kairbros en GitHub', href: 'https://github.com/Kairbros', icon: GithubIcon },
     { label: 'itch.io', href: 'https://just-kvin.itch.io/', icon: ItchIcon },
 ]
 
@@ -118,7 +118,7 @@ const tone = computed(() => {
 
                     <ul v-else class="dd-nav__out">
                         <li v-for="link in elsewhere" :key="link.label">
-                            <a :href="link.href" target="_blank" rel="noopener noreferrer">
+                            <a :href="link.href" :title="link.title" target="_blank" rel="noopener noreferrer">
                                 <component :is="link.icon" class="dd-nav__icon" aria-hidden="true" />
                                 {{ link.label }}
                             </a>

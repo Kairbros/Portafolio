@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue'
 import { useProjectStore } from '@/stores/Store'
 import { track } from '@/composables/useLoader'
+import { setPageTitle } from '@/composables/usePageMeta'
 import { coverUrl, fileUrl, isExternal, isImage, isPage } from '@/utils/media'
 import PhotoZoom from '@/components/flash/PhotoZoom.vue'
 import GameStage from '@/components/ui/GameStage.vue'
@@ -57,8 +58,11 @@ onMounted(async () => {
     done.value = true
 })
 
+watchEffect(() => setPageTitle(project.value?.name ?? ''))
+
 onUnmounted(() => {
     projectStore.project = null
+    setPageTitle('')
 })
 </script>
 
