@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import DrawingThumb from '@/components/notebook/DrawingThumb.vue'
 import type { Drawing } from '@/stores/drawings'
@@ -8,7 +8,36 @@ const props = withDefaults(defineProps<{
     drawings: Drawing[]
     editable?: boolean
     selectedId?: number | null
-}>(), { editable: false, selectedId: null })
+    snap?: boolean
+}>(), { editable: false, selectedId: null, snap: true })
+
+const GRID_X = 2.5
+const LINE_Y = 5.6
+const PULL = 1.2
+
+const guides = ref<{ x: number | null; y: number | null }>({ x: null, y: null })
+
+const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n))
+
+function snapAxis(pos: number, size: number, lines: number[], step: number, free: boolean) {
+    if (free) return { pos, guide: null }
+    let best: { pos: number; guide: number; dist: number } | null = null
+    for (const line of lines) {
+        for (const k of [0, 0.5, 1]) {
+            const dist = Math.abs(pos + size * k - line)
+            if (dist <= PULL && (!best || dist < best.dist)) best = { pos: line - size * k, guide: line, dist }
+        }
+    }
+    return best ? { pos: best.pos, guide: best.guide } : { pos: Math.round(pos / step) * step, guide: null }
+}
+
+function cardSize(card: HTMLElement) {
+    const sheet = card.parentElement!
+    return {
+        w: (card.offsetWidth / sheet.clientWidth) * 100,
+        h: (card.offsetHeight / sheet.clientHeight) * 100,
+    }
+}
 
 const emit = defineEmits<{
     open: [drawing: Drawing]
@@ -37,7 +66,17 @@ function topZ() {
 }
 
 // ---------- mover ----------
-let drag: { d: Drawing; card: HTMLElement; px: number; py: number; x: number; y: number; z: number; w: number; h: number } | null = null
+let drag: {
+    d: Drawing
+    px: number
+    py: number
+    x: number
+    y: number
+    z: number
+    w: number
+    h: number
+    size: { w: number; h: number }
+} | null = null
 
 function startDrag(e: PointerEvent, d: Drawing) {
     if (!props.editable) return
@@ -47,19 +86,38 @@ function startDrag(e: PointerEvent, d: Drawing) {
     // tocar una tarjeta la sube al frente
     if (props.drawings.some((other) => other !== d && other.z >= d.z)) d.z = topZ() + 1
     emit('select', d)
-    drag = { d, card, px: e.clientX, py: e.clientY, x: d.x, y: d.y, z, w: sheet.width, h: sheet.height }
+    drag = { d, px: e.clientX, py: e.clientY, x: d.x, y: d.y, z, w: sheet.width, h: sheet.height, size: cardSize(card) }
     card.setPointerCapture(e.pointerId)
 }
 
 function moveDrag(e: PointerEvent) {
     if (!drag) return
-    const maxX = 100 - (drag.card.offsetWidth / drag.w) * 100
-    const maxY = 100 - (drag.card.offsetHeight / drag.h) * 100
-    drag.d.x = round(Math.max(0, Math.min(maxX, drag.x + ((e.clientX - drag.px) / drag.w) * 100)))
-    drag.d.y = round(Math.max(0, Math.min(maxY, drag.y + ((e.clientY - drag.py) / drag.h) * 100)))
+    const { w, h } = drag.size
+    const others = props.drawings.filter((o) => o !== drag!.d)
+    const free = !props.snap || e.altKey
+
+    const sx = snapAxis(
+        drag.x + ((e.clientX - drag.px) / drag.w) * 100,
+        w,
+        [50, ...others.flatMap((o) => [o.x, o.x + w / 2, o.x + w])],
+        GRID_X,
+        free,
+    )
+    const sy = snapAxis(
+        drag.y + ((e.clientY - drag.py) / drag.h) * 100,
+        h,
+        [50, ...others.flatMap((o) => [o.y, o.y + h / 2, o.y + h])],
+        LINE_Y,
+        free,
+    )
+
+    drag.d.x = round(clamp(sx.pos, 0, 100 - w))
+    drag.d.y = round(clamp(sy.pos, 0, 100 - h))
+    guides.value = { x: sx.guide, y: sy.guide }
 }
 
 function endDrag() {
+    guides.value = { x: null, y: null }
     if (!drag) return
     const { d, x, y, z } = drag
     drag = null
@@ -86,6 +144,8 @@ function moveSpin(e: PointerEvent) {
     let rotation = spin.rotation + angleOf(e, spin.cx, spin.cy) - spin.angle
     // con shift salta de 15 en 15
     rotation = e.shiftKey ? Math.round(rotation / 15) * 15 : Math.round(rotation)
+    const straight = Math.round(rotation / 45) * 45
+    if (props.snap && !e.altKey && Math.abs(rotation - straight) <= 3) rotation = straight
     spin.d.rotation = ((rotation + 540) % 360) - 180
 }
 
@@ -111,8 +171,9 @@ function onKey(e: KeyboardEvent, d: Drawing) {
     if (e.key === '[' || e.key === ']') {
         d.rotation += e.key === '[' ? -3 : 3
     } else if (moves[e.key]) {
-        d.x = round(Math.max(0, Math.min(82, d.x + moves[e.key]![0])))
-        d.y = round(Math.max(0, Math.min(70, d.y + moves[e.key]![1])))
+        const size = cardSize(e.currentTarget as HTMLElement)
+        d.x = round(clamp(d.x + moves[e.key]![0], 0, 100 - size.w))
+        d.y = round(clamp(d.y + moves[e.key]![1], 0, 100 - size.h))
     } else {
         return
     }
@@ -130,8 +191,11 @@ function onClick(d: Drawing) {
 </script>
 
 <template>
-    <div class="nb-sheet" :class="{ 'nb-sheet--board': editable }">
+    <div class="nb-sheet" :class="{ 'nb-sheet--board': editable, 'nb-sheet--snap': editable && snap }">
         <p v-if="!drawings.length" class="nb-sheet__empty">{{ t('notebook.empty') }}</p>
+
+        <span v-if="guides.x !== null" class="nb-guide nb-guide--v" :style="{ left: `${guides.x}%` }" aria-hidden="true"></span>
+        <span v-if="guides.y !== null" class="nb-guide nb-guide--h" :style="{ top: `${guides.y}%` }" aria-hidden="true"></span>
 
         <div
             v-for="d in ordered"

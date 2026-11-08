@@ -8,6 +8,9 @@ const model = defineModel<string>({ required: true })
 const { t } = useI18n()
 
 const RES = 48
+const INNER = 0.42
+const GAP = 0.08
+const VOID: [number, number, number] = [7, 5, 12]
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 const hue = ref(0)
@@ -17,11 +20,17 @@ let dragging = false
 
 const mark = computed(() => {
     const angle = (hue.value * Math.PI) / 180
+    const radius = INNER + sat.value * (1 - INNER)
     return {
-        left: `${50 + Math.cos(angle) * sat.value * 50}%`,
-        top: `${50 + Math.sin(angle) * sat.value * 50}%`,
+        left: `${50 + Math.cos(angle) * radius * 50}%`,
+        top: `${50 + Math.sin(angle) * radius * 50}%`,
     }
 })
+
+function hexToRgb(hex: string): [number, number, number] {
+    const n = parseInt(hex.slice(1), 16)
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
 
 const track = computed(() => `linear-gradient(to right, #000, ${hsvToHex(hue.value, sat.value, 1)})`)
 
@@ -38,6 +47,7 @@ function draw() {
     if (!ctx) return
     const img = ctx.createImageData(RES, RES)
     const c = RES / 2
+    const hole = hexToRgb(model.value)
 
     for (let y = 0; y < RES; y++) {
         for (let x = 0; x < RES; x++) {
@@ -46,7 +56,8 @@ function draw() {
             const r = Math.hypot(dx, dy) / c
             if (r > 1) continue
             const h = ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360
-            const [red, green, blue] = hsvToRgb(h, r, val.value)
+            const [red, green, blue] =
+                r < INNER - GAP ? hole : r < INNER ? VOID : hsvToRgb(h, (r - INNER) / (1 - INNER), val.value)
             const i = (y * RES + x) * 4
             img.data[i] = red
             img.data[i + 1] = green
@@ -62,21 +73,24 @@ function emit() {
     model.value = hsvToHex(hue.value, sat.value, val.value)
 }
 
-function pickAt(e: PointerEvent) {
-    const r = canvas.value!.getBoundingClientRect()
-    const dx = ((e.clientX - r.left) / r.width) * 2 - 1
-    const dy = ((e.clientY - r.top) / r.height) * 2 - 1
+function pickAt(e: PointerEvent, start = false): boolean {
+    const box = canvas.value!.getBoundingClientRect()
+    const dx = ((e.clientX - box.left) / box.width) * 2 - 1
+    const dy = ((e.clientY - box.top) / box.height) * 2 - 1
+    const r = Math.hypot(dx, dy)
+    if (start && (r < INNER - GAP || r > 1)) return false
     hue.value = ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360
-    sat.value = Math.min(1, Math.hypot(dx, dy))
+    sat.value = Math.max(0, Math.min(1, (r - INNER) / (1 - INNER)))
     if (val.value < 0.2) val.value = 1
     emit()
+    return true
 }
 
 function down(e: PointerEvent) {
     const disc = e.currentTarget as HTMLElement
+    if (!pickAt(e, true)) return
     dragging = true
     disc.setPointerCapture(e.pointerId)
-    pickAt(e)
 }
 
 function move(e: PointerEvent) {
@@ -107,8 +121,14 @@ function setValue(e: Event) {
     emit()
 }
 
-watch(model, sync, { immediate: true })
-watch(val, draw)
+watch(
+    model,
+    (hex) => {
+        sync(hex)
+        draw()
+    },
+    { immediate: true },
+)
 onMounted(draw)
 </script>
 

@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { MAX_COLORS, PALETTE, PAPER, SIZE, blank, isEmpty, pack, paint } from '@/utils/pixels'
+import { MAX_COLORS, PALETTE, SIZE, blank, isEmpty, pack, paint } from '@/utils/pixels'
 import ColorWheel from '@/components/notebook/ColorWheel.vue'
+import PencilIcon from '~icons/pixelarticons/pencil'
+import EraserIcon from '~icons/pixelarticons/eraser'
+import BucketIcon from '~icons/pixelarticons/paint-bucket'
+import PipetteIcon from '~icons/pixelarticons/pipette'
+import UndoIcon from '~icons/pixelarticons/undo'
+import TrashIcon from '~icons/pixelarticons/trash'
+import ZoomInIcon from '~icons/pixelarticons/zoom-in'
+import ZoomOutIcon from '~icons/pixelarticons/zoom-out'
 
 // el texto del dibujo; vacío cuando no hay nada pintado
 const model = defineModel<string>({ required: true })
@@ -12,9 +20,8 @@ const { t } = useI18n()
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 const current = ref(PALETTE[8]!)
-const tool = ref<'pen' | 'erase' | 'fill'>('pen')
+const tool = ref<'pen' | 'erase' | 'fill' | 'pick'>('pen')
 const canUndo = ref(false)
-const used = ref<string[]>([])
 const full = ref(false)
 
 type Point = { x: number; y: number }
@@ -38,13 +45,16 @@ let dragging: { from: Point; pan: Point } | null = null
 let pendingFill: { id: number; cell: Point; ink: number } | null = null
 let observer: ResizeObserver | null = null
 
-const presets = PALETTE.map((hex, i) => ({ hex, name: i + 1 })).filter((p) => p.hex !== PAPER)
+const toolButtons = [
+    { id: 'pen', label: 'notebook.pen', icon: PencilIcon },
+    { id: 'erase', label: 'notebook.eraser', icon: EraserIcon },
+    { id: 'fill', label: 'notebook.fill', icon: BucketIcon },
+    { id: 'pick', label: 'notebook.picker', icon: PipetteIcon },
+] as const
 
 function render() {
     if (canvas.value) paint(canvas.value, cells, palette, true, { zoom: zoom.value, ...pan.value })
     canUndo.value = undoStack.length > 0
-    const seen = new Set<number>(cells)
-    used.value = palette.filter((_, i) => seen.has(i + 1))
 }
 
 function commit() {
@@ -196,6 +206,14 @@ function down(e: PointerEvent) {
         return
     }
 
+    if (tool.value === 'pick' || e.altKey) {
+        const cell = cellAt(e)
+        const picked = cells[cell.y * SIZE + cell.x]
+        if (picked) current.value = palette[picked - 1]!
+        if (tool.value === 'pick') tool.value = 'pen'
+        return
+    }
+
     const ink = tool.value === 'erase' ? 0 : slotFor(current.value)
     full.value = tool.value !== 'erase' && ink === 0
     if (full.value) return
@@ -258,11 +276,6 @@ function up(e: PointerEvent) {
     }
 }
 
-function pick(hex: string) {
-    current.value = hex
-    if (tool.value === 'erase') tool.value = 'pen'
-}
-
 function undo() {
     const previous = undoStack.pop()
     if (!previous) return
@@ -290,7 +303,7 @@ watch(model, (value) => {
 
 watch(current, () => {
     full.value = false
-    if (tool.value === 'erase') tool.value = 'pen'
+    if (tool.value === 'erase' || tool.value === 'pick') tool.value = 'pen'
 })
 
 watch([zoom, pan], render)
@@ -320,63 +333,38 @@ onUnmounted(() => observer?.disconnect())
             @contextmenu.prevent
         ></canvas>
 
-        <div class="nb-zoom" role="group" :aria-label="t('notebook.zoom')">
-            <button type="button" class="dd-btn" :aria-label="t('notebook.zoomOut')" :disabled="zoom <= 1" @click="zoomBy(1 / 1.5)">−</button>
-            <button type="button" class="dd-btn nb-zoom__level" :aria-label="t('notebook.zoomReset')" :disabled="zoom === 1" @click="resetView">{{ Math.round(zoom * 100) }}%</button>
-            <button type="button" class="dd-btn" :aria-label="t('notebook.zoomIn')" :disabled="zoom >= MAX_ZOOM" @click="zoomBy(1.5)">+</button>
-            <span class="nb-zoom__hint">{{ t('notebook.zoomHint') }}</span>
-        </div>
-
         <div class="nb-picker">
             <ColorWheel v-model="current" />
 
             <div class="nb-picker__side">
-                <div class="nb-picker__now">
-                    <span class="nb-picker__chip" :style="{ background: current }" aria-hidden="true"></span>
-                    <span>{{ current }}</span>
-                </div>
+                <div class="nb-bar">
+                    <div class="nb-bar__group" role="group" :aria-label="t('notebook.tools')">
+                        <button v-for="b in toolButtons" :key="b.id" type="button" class="nb-icon" :aria-label="t(b.label)" :title="t(b.label)" :aria-pressed="tool === b.id" @click="tool = b.id">
+                            <component :is="b.icon" aria-hidden="true" />
+                        </button>
+                        <button type="button" class="nb-icon" :aria-label="t('notebook.undo')" :title="t('notebook.undo')" :disabled="!canUndo" @click="undo">
+                            <UndoIcon aria-hidden="true" />
+                        </button>
+                        <button type="button" class="nb-icon" :aria-label="t('notebook.clear')" :title="t('notebook.clear')" :disabled="!model" @click="clear">
+                            <TrashIcon aria-hidden="true" />
+                        </button>
+                    </div>
 
-                <div class="nb-palette" role="group" :aria-label="t('notebook.colors')">
-                    <button
-                        v-for="p in presets"
-                        :key="p.hex"
-                        type="button"
-                        class="nb-palette__swatch"
-                        :style="{ background: p.hex }"
-                        :aria-label="t(`notebook.palette.${p.name}`)"
-                        :title="t(`notebook.palette.${p.name}`)"
-                        :aria-pressed="current === p.hex && tool !== 'erase'"
-                        @click="pick(p.hex)"
-                    ></button>
-                </div>
-
-                <div v-if="used.length" class="nb-picker__used">
-                    <span class="nb-picker__label">{{ t('notebook.used', { n: used.length, max: MAX_COLORS }) }}</span>
-                    <div class="nb-palette" role="group" :aria-label="t('notebook.usedColors')">
-                        <button
-                            v-for="hex in used"
-                            :key="hex"
-                            type="button"
-                            class="nb-palette__swatch"
-                            :style="{ background: hex }"
-                            :aria-label="hex"
-                            :title="hex"
-                            :aria-pressed="current === hex && tool !== 'erase'"
-                            @click="pick(hex)"
-                        ></button>
+                    <div class="nb-bar__group" role="group" :aria-label="t('notebook.zoom')">
+                        <button type="button" class="nb-icon" :aria-label="t('notebook.zoomOut')" :title="t('notebook.zoomOut')" :disabled="zoom <= 1" @click="zoomBy(1 / 1.5)">
+                            <ZoomOutIcon aria-hidden="true" />
+                        </button>
+                        <button type="button" class="nb-icon nb-icon--level" :aria-label="t('notebook.zoomReset')" :title="t('notebook.zoomReset')" :disabled="zoom === 1" @click="resetView">
+                            {{ Math.round(zoom * 100) }}%
+                        </button>
+                        <button type="button" class="nb-icon" :aria-label="t('notebook.zoomIn')" :title="t('notebook.zoomIn')" :disabled="zoom >= MAX_ZOOM" @click="zoomBy(1.5)">
+                            <ZoomInIcon aria-hidden="true" />
+                        </button>
                     </div>
                 </div>
 
                 <p v-if="full" class="dd-field__error" role="status">{{ t('notebook.full', { max: MAX_COLORS }) }}</p>
             </div>
-        </div>
-
-        <div class="nb-tools" role="group" :aria-label="t('notebook.tools')">
-            <button type="button" class="dd-btn" :aria-pressed="tool === 'pen'" @click="tool = 'pen'">{{ t('notebook.pen') }}</button>
-            <button type="button" class="dd-btn" :aria-pressed="tool === 'erase'" @click="tool = 'erase'">{{ t('notebook.eraser') }}</button>
-            <button type="button" class="dd-btn" :aria-pressed="tool === 'fill'" @click="tool = 'fill'">{{ t('notebook.fill') }}</button>
-            <button type="button" class="dd-btn" :disabled="!canUndo" @click="undo">{{ t('notebook.undo') }}</button>
-            <button type="button" class="dd-btn" :disabled="!model" @click="clear">{{ t('notebook.clear') }}</button>
         </div>
     </div>
 </template>

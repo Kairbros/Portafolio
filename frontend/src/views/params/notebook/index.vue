@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useDrawingStore, type Drawing } from '@/stores/drawings'
 import { track } from '@/composables/useLoader'
 import NotebookSheet from '@/components/notebook/NotebookSheet.vue'
@@ -10,6 +10,23 @@ const store = useDrawingStore()
 const page = ref(0)
 const selectedId = ref<number | null>(null)
 const notice = ref('')
+
+const SNAP_KEY = 'portafolio.notebook.snap'
+const snap = ref(readSnap())
+
+function readSnap() {
+    try {
+        return localStorage.getItem(SNAP_KEY) !== 'off'
+    } catch {
+        return true
+    }
+}
+
+watch(snap, (on) => {
+    try {
+        localStorage.setItem(SNAP_KEY, on ? 'on' : 'off')
+    } catch {}
+})
 
 const total = computed(() => store.pages.length)
 const current = computed(() => store.pages[page.value] ?? null)
@@ -84,6 +101,12 @@ async function save(drawing: Drawing) {
     notice.value = res.ok ? '' : res.message
 }
 
+async function straighten() {
+    if (!selected.value) return
+    selected.value.rotation = 0
+    await save(selected.value)
+}
+
 async function remove() {
     if (!selected.value) return
     const res = await store.unplace(selected.value)
@@ -147,14 +170,17 @@ onMounted(reload)
                     v-if="current"
                     :drawings="current.drawings"
                     editable
+                    :snap="snap"
                     :selected-id="selectedId"
                     @select="selectedId = $event.id"
                     @commit="save"
                 />
 
                 <div class="nb-admin__tools">
+                    <button type="button" class="dd-btn" :aria-pressed="snap" @click="snap = !snap">imán</button>
                     <template v-if="selected">
                         <span class="dd-small">{{ nameOf(selected) }}</span>
+                        <button type="button" class="dd-btn" :disabled="selected.rotation === 0" @click="straighten">enderezar</button>
                         <button type="button" class="dd-btn" @click="remove">quitar</button>
                     </template>
                     <p v-if="notice" class="dd-field__error" role="status">{{ notice }}</p>
