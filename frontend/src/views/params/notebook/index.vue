@@ -54,7 +54,6 @@ async function addPage() {
     selectedId.value = null
 }
 
-// los dibujos de la página vuelven a pendientes
 async function deletePage() {
     if (!current.value || total.value <= 1) return
     const res = await store.deletePage(current.value)
@@ -67,7 +66,6 @@ async function deletePage() {
     await reload()
 }
 
-// pega el dibujo en la página abierta, en un lugar y un giro al azar
 async function paste(drawing: Drawing) {
     if (!current.value) return
     const res = await store.place(drawing, {

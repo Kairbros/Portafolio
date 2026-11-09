@@ -1,5 +1,3 @@
-/* Libreta: dibujos pixel de visitantes pegados en páginas */
-
 .nb {
   display: grid;
   gap: 18px;
@@ -24,7 +22,6 @@
   height: 16px;
 }
 
-/* ventana para dibujar */
 .nb-compose {
   width: min(880px, 100%);
 }
@@ -348,7 +345,6 @@
   outline-offset: 3px;
 }
 
-/* manija para girar, sólo en la tarjeta seleccionada */
 .nb-card__rotate {
   position: absolute;
   top: -12px;

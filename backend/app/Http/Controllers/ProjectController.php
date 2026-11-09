@@ -2,448 +2,269 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Http\Repositories\ProjectRepository;
-use App\Http\Repositories\TypeProjectRepository;
-use App\Models\TypeProject;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use ZipArchive;
+use App\Models\Project;
+use App\Models\ProjectFile;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
-    function __construct(
-        protected ProjectRepository $project_repository,
-        protected TypeProjectRepository $type_project_repository,
-    )
+    private const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+
+    private const DOWNLOAD_EXTENSIONS = ['zip', 'rar', '7z', 'tar', 'gz', 'exe', 'msi', 'apk', 'dmg', 'appimage', 'deb', 'jar', 'pdf'];
+
+    private const STATUSES = ['in_progress', 'finished', 'paused'];
+
+    private const MAX_UPLOAD_BYTES = 512 * 1024 * 1024;
+
+    function __construct(protected ProjectRepository $project_repository)
     {}
-
-    function delete(string $id)
-    {
-        try {
-            $this->project_repository->delete_item($id);
-
-            return response()->json([
-                'message' => 'proyecto eliminado',
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('error al eliminar proyecto', ['exception' => $e]);
-
-            return response()->json([
-                'message' => 'error al eliminar proyecto',
-                'error' => app()->isLocal() ? $e->getMessage() : null,
-            ], 500);
-        }
-    }
 
     function index()
     {
-        return $this->project_repository->get_items()->load('type');
+        return $this->project_repository->published_items();
     }
 
-    function show(string $id)
+    function admin_index()
     {
-        return $this->project_repository->get_item($id)->load('type');
+        return $this->project_repository->all_items();
+    }
+
+    function show(string $slug)
+    {
+        return $this->project_repository->published_by_slug($slug);
+    }
+
+    function admin_show(string $id)
+    {
+        return $this->project_repository->full_item($id);
     }
 
     function store(Request $request)
     {
-        // si se pasa de post_max_size PHP descarta el body entero
-        if (empty($request->all()) && (int) $request->server('CONTENT_LENGTH') > 0) {
-            return response()->json([
-                'message' => 'El envío pesa más de lo que admite el servidor (' . ini_get('post_max_size') . '). Sube un archivo más pequeño.',
-            ], 413);
+        if ($too_big = $this->too_big($request)) {
+            return $too_big;
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|min:3',
-            'type' => 'required|integer|exists:type_projects,id',
-            'description' => 'required|string|max:1024',
-            'description_en' => 'nullable|string|max:1024',
-        ], [
-            'name.min'      => 'El nombre del proyecto debe tener al menos :min caracteres.',
-            'name.required' => 'El nombre del proyecto es obligatorio.',
-            'name.max'      => 'El nombre no puede superar los :max caracteres.',
-            'type.required' => 'El tipo de proyecto es obligatorio.',
-            'type.integer'  => 'El tipo de proyecto no es válido.',
-            'type.exists'   => 'Ese tipo de proyecto no existe.',
-            'description.max' => 'La descripción no puede superar los :max caracteres.',
-            'description.required' => 'La descripción es obligatoria.',
-        ], [
-            'name' => 'nombre',
-            'type' => 'tipo',
-            'description' => 'descripcion',
-        ]);
+        $validated = $this->validate_project($request);
 
-        $type = $this->type_project_repository->get_item($validated['type']);
-        $extensions = $this->allowed_extensions($type);
+        $project = DB::transaction(function () use ($request, $validated) {
+            $project = $this->project_repository->save_item([
+                ...$this->attributes($validated),
+                'slug' => $this->project_repository->unique_slug($validated['name']),
+            ]);
 
-        $is_link = in_array('url', $extensions, true) && ! $request->hasFile('file');
+            $this->project_repository->sync_links($project, $validated['links'] ?? []);
 
-        $is_zip = ! $is_link
-            && $request->hasFile('file')
-            && strtolower($request->file('file')->getClientOriginalExtension()) === 'zip';
+            if ($request->hasFile('cover')) {
+                $project->cover = $this->store_cover($request->file('cover'), $project);
+                $project->save();
+            }
 
-        $payload = $is_link
-            ? $this->validate_link($request)
-            : $this->validate_file($request, $extensions, $type);
+            return $project;
+        });
 
-        $this->validate_cover($request, $this->file_is_image($is_link ? null : $request->file('file')));
-
-        $extracted = null;
-
-        try {
-            $project = DB::transaction(function () use ($request, $validated, $type, $is_link, $payload, $is_zip, &$extracted) {
-                $project = $this->project_repository->save_item([
-                    'name' => $validated['name'],
-                    'description' => $validated['description'],
-                    'description_en' => $validated['description_en'] ?? null,
-                    'type_project_id' => $type->id,
-                    'folder' => 'default',
-                ]);
-
-                $sub_folder = Str::slug($type->name);
-
-                $stamp = time() . '_' . Str::slug($validated['name']);
-
-                if ($is_link) {
-                    $folder = $payload['url'];
-                } elseif ($is_zip) {
-                    $extracted = 'projects/' . $sub_folder . '/' . $stamp;
-
-                    $folder = $this->extract_zip($request->file('file'), $extracted);
-                } else {
-                    $file = $request->file('file');
-
-                    $folder = $file->storeAs(
-                        'projects/' . $sub_folder,
-                        $stamp . '.' . strtolower($file->getClientOriginalExtension()),
-                        'public',
-                    );
-                }
-
-                return $this->project_repository->update_item($project->id, [
-                    'folder' => $folder,
-                    'cover' => $this->store_cover($request, $sub_folder, $stamp, $is_link ? null : $folder),
-                ]);
-            });
-
-            return response()->json([
-                'message' => 'proyecto creado',
-                'project' => $project,
-            ], 201);
-        } catch (ValidationException $e) {
-            $this->clean_up($extracted);
-
-            throw $e;
-        } catch (\Exception $e) {
-            $this->clean_up($extracted);
-
-            Log::error('error al crear proyecto', ['exception' => $e]);
-
-            return response()->json([
-                'message' => 'error al crear proyecto',
-                'error' => app()->isLocal() ? $e->getMessage() : null,
-            ], 500);
-        }
+        return response()->json(['message' => 'proyecto creado', 'project' => $project], 201);
     }
 
     function update(Request $request, string $id)
     {
-        if (empty($request->all()) && (int) $request->server('CONTENT_LENGTH') > 0) {
-            return response()->json([
-                'message' => 'El envío pesa más de lo que admite el servidor (' . ini_get('post_max_size') . '). Sube un archivo más pequeño.',
-            ], 413);
+        if ($too_big = $this->too_big($request)) {
+            return $too_big;
         }
 
-        $project = $this->project_repository->get_item($id)->load('type');
-        $type = $project->type;
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|min:3',
-            'description' => 'required|string|max:1024',
-            'description_en' => 'nullable|string|max:1024',
-        ], [
-            'name.min'      => 'El nombre del proyecto debe tener al menos :min caracteres.',
-            'name.required' => 'El nombre del proyecto es obligatorio.',
-            'name.max'      => 'El nombre no puede superar los :max caracteres.',
-            'description.max' => 'La descripción no puede superar los :max caracteres.',
-            'description.required' => 'La descripción es obligatoria.',
-        ]);
-
-        $extensions = $this->allowed_extensions($type);
-
-        // el archivo solo se reemplaza si llega uno nuevo
-        $has_file = $request->hasFile('file');
-        $has_url = ! $has_file && in_array('url', $extensions, true) && $request->filled('url');
-        $replace = $has_file || $has_url;
-
-        $payload = $has_url
-            ? $this->validate_link($request)
-            : ($has_file ? $this->validate_file($request, $extensions, $type) : []);
-
-        $is_zip = $has_file
-            && strtolower($request->file('file')->getClientOriginalExtension()) === 'zip';
-
-        $old_folder = $project->folder;
+        $project = $this->project_repository->get_item($id);
+        $validated = $this->validate_project($request);
         $old_cover = $project->cover;
 
-        // la portada vieja sigue sirviendo si es un archivo aparte o si no se toca el archivo
-        $cover_survives = $old_cover && (! $replace || $old_cover !== $old_folder);
-        $new_file_image = $has_file && $this->file_is_image($request->file('file'));
-
-        $this->validate_cover($request, $cover_survives || $new_file_image);
-
-        $sub_folder = Str::slug($type->name);
-        $stamp = time() . '_' . Str::slug($validated['name']);
-
-        $extracted = null;
-        $stored = [];
-
-        try {
-            $data = [
-                'name' => $validated['name'],
-                'description' => $validated['description'],
-                'description_en' => $validated['description_en'] ?? null,
-            ];
-
-            if ($has_url) {
-                $data['folder'] = $payload['url'];
-            } elseif ($is_zip) {
-                $extracted = 'projects/' . $sub_folder . '/' . $stamp;
-                $data['folder'] = $this->extract_zip($request->file('file'), $extracted);
-            } elseif ($has_file) {
-                $file = $request->file('file');
-                $data['folder'] = $stored[] = $file->storeAs(
-                    'projects/' . $sub_folder,
-                    $stamp . '.' . strtolower($file->getClientOriginalExtension()),
-                    'public',
-                );
+        DB::transaction(function () use ($request, $validated, $project) {
+            foreach ($this->attributes($validated) as $key => $value) {
+                $project[$key] = $value;
             }
 
             if ($request->hasFile('cover')) {
-                $cover = $request->file('cover');
-                $data['cover'] = $stored[] = $cover->storeAs(
-                    'projects/' . $sub_folder . '/covers',
-                    $stamp . '_cover.' . strtolower($cover->getClientOriginalExtension()),
-                    'public',
-                );
-            } elseif ($replace && $old_cover === $old_folder) {
-                $data['cover'] = $new_file_image ? $data['folder'] : null;
+                $project->cover = $this->store_cover($request->file('cover'), $project);
             }
 
-            $project = $this->project_repository->update_item($id, $data);
+            $project->save();
 
-            $keep = array_filter([...$stored, $extracted]);
+            $this->project_repository->sync_links($project, $validated['links'] ?? []);
+        });
 
-            if ($replace) {
-                $this->remove_stored($old_folder, $keep);
-            }
-
-            if (array_key_exists('cover', $data) && $old_cover !== $old_folder) {
-                $this->remove_stored($old_cover, $keep);
-            }
-
-            return response()->json([
-                'message' => 'proyecto actualizado',
-                'project' => $project->load('type'),
-            ], 200);
-        } catch (ValidationException $e) {
-            $this->clean_up($extracted);
-            Storage::disk('public')->delete($stored);
-
-            throw $e;
-        } catch (\Exception $e) {
-            $this->clean_up($extracted);
-            Storage::disk('public')->delete($stored);
-
-            Log::error('error al actualizar proyecto', ['exception' => $e]);
-
-            return response()->json([
-                'message' => 'error al actualizar proyecto',
-                'error' => app()->isLocal() ? $e->getMessage() : null,
-            ], 500);
+        if ($old_cover && $old_cover !== $project->cover) {
+            Storage::disk('public')->delete($old_cover);
         }
+
+        return response()->json([
+            'message' => 'proyecto actualizado',
+            'project' => $this->project_repository->full_item($id),
+        ], 200);
     }
 
-    // borra un archivo viejo del proyecto; si venía de un zip borra su carpeta entera
-    private function remove_stored(?string $path, array $keep): void
+    function delete(string $id)
     {
-        if (! $path || ! str_starts_with($path, 'projects/')) {
-            return;
-        }
+        $this->project_repository->delete_item($id);
 
-        $parts = explode('/', $path);
-
-        if (count($parts) >= 4 && $parts[2] !== 'covers') {
-            $directory = implode('/', array_slice($parts, 0, 3));
-
-            if (! in_array($directory, $keep, true)) {
-                Storage::disk('public')->deleteDirectory($directory);
-            }
-
-            return;
-        }
-
-        if (! in_array($path, $keep, true)) {
-            Storage::disk('public')->delete($path);
-        }
+        return response()->json(['message' => 'proyecto eliminado'], 200);
     }
 
-    private function clean_up(?string $folder): void
+    function store_file(Request $request, string $id)
     {
-        // ojo: deleteDirectory('') borraría todo el disco
-        if ($folder) {
-            Storage::disk('public')->deleteDirectory($folder);
-        }
-    }
-
-    private function extract_zip(UploadedFile $file, string $destination): string
-    {
-        $disk = Storage::disk('public');
-        $zip = new ZipArchive();
-
-        if ($zip->open($file->getRealPath()) !== true) {
-            throw ValidationException::withMessages([
-                'file' => 'No se pudo abrir el .zip: puede estar corrupto o no ser un zip.',
-            ]);
+        if ($too_big = $this->too_big($request)) {
+            return $too_big;
         }
 
-        try {
-            $entry_point = null;
+        $project = $this->project_repository->get_item($id);
+        $limit = $this->max_upload_kilobytes();
 
-            for ($i = 0; $i < $zip->numFiles; $i++) {
-                $entry = str_replace('\\', '/', (string) $zip->getNameIndex($i));
-
-                // zip slip
-                if ($entry === '' || str_starts_with($entry, '/')
-                    || preg_match('#(^|/)\.\.(/|$)#', $entry)) {
-                    throw ValidationException::withMessages([
-                        'file' => "El .zip trae una ruta que no se puede escribir: {$entry}",
-                    ]);
-                }
-
-                if (! $entry_point
-                    && strtolower(basename($entry)) === 'index.html'
-                    && substr_count($entry, '/') <= 1) {
-                    $entry_point = $entry;
-                }
-            }
-
-            if (! $entry_point) {
-                throw ValidationException::withMessages([
-                    'file' => 'El .zip no trae ningún index.html a la vista, así que no hay nada que abrir. Tiene que estar en la raíz del zip o dentro de una sola carpeta.',
-                ]);
-            }
-
-            if (! $zip->extractTo($disk->path($destination))) {
-                $disk->deleteDirectory($destination);
-
-                throw new \RuntimeException('no se pudo descomprimir el zip del proyecto');
-            }
-        } finally {
-            $zip->close();
-        }
-
-        return $destination . '/' . $entry_point;
-    }
-
-    private const COVER_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
-
-    private function validate_cover(Request $request, bool $optional): void
-    {
-        $rules = ['image', 'mimes:' . implode(',', self::COVER_EXTENSIONS), 'max:8192'];
-
-        array_unshift($rules, $optional ? 'nullable' : 'required');
-
-        $request->validate([
-            'cover' => $rules,
+        $data = $request->validate([
+            'label' => 'required|string|max:80',
+            'file' => ['required', 'file', 'extensions:' . implode(',', self::DOWNLOAD_EXTENSIONS), 'max:' . $limit],
         ], [
-            'cover.required' => 'Este proyecto necesita una portada: es lo que se ve en la carpeta.',
-            'cover.image'    => 'La portada tiene que ser una imagen.',
-            'cover.mimes'    => 'La portada debe ser de tipo: :values.',
-            'cover.max'      => 'La portada no puede pesar más de 8 MB.',
-        ], [
-            'cover' => 'portada',
+            'label.required' => 'Ponle un nombre a la descarga.',
+            'label.max' => 'El nombre no puede superar los :max caracteres.',
+            'file.required' => 'Elige un archivo.',
+            'file.uploaded' => 'El archivo no se pudo subir; el límite es ' . $this->human_size($limit) . '.',
+            'file.extensions' => 'Tipo de archivo no permitido. Se aceptan: ' . implode(', ', self::DOWNLOAD_EXTENSIONS) . '.',
+            'file.max' => 'El archivo no puede pesar más de ' . $this->human_size($limit) . '.',
         ]);
+
+        $file = $data['file'];
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        return response()->json($project->files()->create([
+            'label' => $data['label'],
+            'path' => $file->storeAs('project-files/' . $project->id, Str::random(32) . '.' . $extension, 'local'),
+            'original_name' => $file->getClientOriginalName(),
+            'size' => $file->getSize(),
+        ]), 201);
     }
 
-    private function store_cover(Request $request, string $sub_folder, string $stamp, ?string $folder): ?string
+    function delete_file(string $id)
     {
-        if ($request->hasFile('cover')) {
-            $cover = $request->file('cover');
+        ProjectFile::query()->findOrFail($id)->delete();
 
-            return $cover->storeAs(
-                'projects/' . $sub_folder . '/covers',
-                $stamp . '_cover.' . strtolower($cover->getClientOriginalExtension()),
-                'public',
-            );
-        }
-
-        return $this->file_is_image($request->file('file')) ? $folder : null;
+        return response()->json(['message' => 'descarga eliminada'], 200);
     }
 
-    private function file_is_image($file): bool
+    function download(string $id)
     {
-        return $file
-            && in_array(strtolower($file->getClientOriginalExtension()), self::COVER_EXTENSIONS, true);
+        $file = ProjectFile::query()->with('project')->findOrFail($id);
+
+        abort_unless($file->project->published, 404);
+
+        return Storage::disk('local')->download($file->path, $file->original_name);
     }
 
-    private function allowed_extensions(TypeProject $type): array
+    function store_image(Request $request, string $id)
     {
-        return collect(explode(',', (string) $type->extension))
-            ->map(fn ($extension) => strtolower(trim($extension, " \t\n\r\0\x0B.")))
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        $project = $this->project_repository->get_item($id);
+
+        $data = $request->validate([
+            'image' => ['required', 'image', 'mimes:' . implode(',', self::IMAGE_EXTENSIONS), 'max:8192'],
+        ], [
+            'image.required' => 'Elige una imagen.',
+            'image.image' => 'El archivo tiene que ser una imagen.',
+            'image.mimes' => 'La imagen debe ser de tipo: :values.',
+            'image.max' => 'La imagen no puede pesar más de 8 MB.',
+        ]);
+
+        $path = $data['image']->storeAs(
+            'projects/' . $project->id . '/images',
+            Str::random(32) . '.' . $data['image']->extension(),
+            'public',
+        );
+
+        return response()->json(['path' => $path], 201);
     }
 
-    private function validate_link(Request $request): array
+    private function validate_project(Request $request): array
     {
         return $request->validate([
-            'url' => 'required|string|url|max:2048',
+            'name' => 'required|string|min:3|max:255',
+            'type' => 'required|integer|exists:type_projects,id',
+            'description' => 'required|string|max:1024',
+            'description_en' => 'nullable|string|max:1024',
+            'body' => 'nullable|string|max:100000',
+            'body_en' => 'nullable|string|max:100000',
+            'status' => ['required', Rule::in(self::STATUSES)],
+            'year' => 'nullable|integer|between:1990,2100',
+            'tags' => 'nullable|array|max:12',
+            'tags.*' => 'string|max:30',
+            'published' => 'required|boolean',
+            'links' => 'nullable|array|max:12',
+            'links.*.label' => 'required|string|max:60',
+            'links.*.url' => 'required|string|url:http,https|max:2048',
+            'cover' => ['nullable', 'image', 'mimes:' . implode(',', self::IMAGE_EXTENSIONS), 'max:8192'],
         ], [
-            'url.required' => 'Este tipo de proyecto necesita un enlace.',
-            'url.url'      => 'El enlace no es una URL válida.',
-            'url.max'      => 'El enlace no puede superar los :max caracteres.',
-        ], [
-            'url' => 'enlace',
+            'name.required' => 'El nombre es obligatorio.',
+            'name.min' => 'El nombre debe tener al menos :min caracteres.',
+            'name.max' => 'El nombre no puede superar los :max caracteres.',
+            'type.required' => 'Elige un tipo.',
+            'type.exists' => 'Ese tipo no existe.',
+            'description.required' => 'El resumen es obligatorio.',
+            'description.max' => 'El resumen no puede superar los :max caracteres.',
+            'description_en.max' => 'El resumen no puede superar los :max caracteres.',
+            'body.max' => 'El artículo es demasiado largo.',
+            'body_en.max' => 'El artículo es demasiado largo.',
+            'status.in' => 'Ese estado no existe.',
+            'year.integer' => 'El año no es válido.',
+            'year.between' => 'El año no es válido.',
+            'tags.max' => 'Como máximo :max etiquetas.',
+            'tags.*.max' => 'Cada etiqueta puede tener hasta :max caracteres.',
+            'links.max' => 'Como máximo :max enlaces.',
+            'links.*.label.required' => 'Cada enlace necesita un nombre.',
+            'links.*.label.max' => 'El nombre del enlace no puede superar los :max caracteres.',
+            'links.*.url.required' => 'Cada enlace necesita una dirección.',
+            'links.*.url.url' => 'El enlace debe empezar por http:// o https://.',
+            'links.*.url.max' => 'El enlace es demasiado largo.',
+            'cover.image' => 'La portada tiene que ser una imagen.',
+            'cover.mimes' => 'La portada debe ser de tipo: :values.',
+            'cover.max' => 'La portada no puede pesar más de 8 MB.',
         ]);
     }
 
-    private function validate_file(Request $request, array $extensions, TypeProject $type): array
+    private function attributes(array $validated): array
     {
-        $file_extensions = array_values(array_diff($extensions, ['url']));
+        return [
+            'name' => $validated['name'],
+            'type_project_id' => $validated['type'],
+            'description' => $validated['description'],
+            'description_en' => $validated['description_en'] ?? null,
+            'body' => $validated['body'] ?? null,
+            'body_en' => $validated['body_en'] ?? null,
+            'status' => $validated['status'],
+            'year' => $validated['year'] ?? null,
+            'tags' => $validated['tags'] ?? [],
+            'published' => (bool) $validated['published'],
+        ];
+    }
 
-        $max = $this->max_upload_kilobytes();
+    private function store_cover(UploadedFile $cover, Project $project): string
+    {
+        return $cover->storeAs(
+            'projects/' . $project->id,
+            'cover-' . Str::random(12) . '.' . $cover->extension(),
+            'public',
+        );
+    }
 
-        $rules = ['required', 'file', 'max:' . $max];
-
-        if ($file_extensions) {
-            $rules[] = 'extensions:' . implode(',', $file_extensions);
+    private function too_big(Request $request): ?JsonResponse
+    {
+        if (! empty($request->all()) || (int) $request->server('CONTENT_LENGTH') === 0) {
+            return null;
         }
 
-        $listed = collect($file_extensions)->map(fn ($e) => '.' . $e)->implode(', ');
-
-        return $request->validate([
-            'file' => $rules,
-        ], [
-            'file.required'   => 'Debes subir el archivo del proyecto.',
-            'file.max'        => 'El archivo no puede pesar más de ' . $this->human_size($max) . '.',
-            'file.extensions' => $file_extensions
-                ? "Un proyecto de tipo {$type->name} solo acepta: {$listed}."
-                : 'El archivo no es válido.',
-        ], [
-            'file' => 'archivo',
-        ]);
+        return response()->json([
+            'message' => 'El envío pesa más de lo que admite el servidor (' . ini_get('post_max_size') . ').',
+        ], 413);
     }
-
-    private const MAX_UPLOAD_BYTES = 512 * 1024 * 1024;
 
     private function max_upload_kilobytes(): int
     {

@@ -17,9 +17,9 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// lectura pública
 Route::get('/projects', [ProjectController::class, 'index']);
-Route::get('/projects/{id}', [ProjectController::class, 'show']);
+Route::get('/projects/files/{id}/download', [ProjectController::class, 'download']);
+Route::get('/projects/{slug}', [ProjectController::class, 'show']);
 
 Route::get('/typeprojects', [TypeProjectController::class, 'index']);
 Route::get('/backgroundimgs', [BackgroundImgController::class, 'index']);
@@ -31,14 +31,17 @@ Route::get('/stickers', [StickerController::class, 'index']);
 Route::get('/about', [AboutController::class, 'show']);
 Route::get('/drawings', [DrawingController::class, 'index']);
 
-// cualquiera puede dejar un dibujo: 5 cada 10 minutos por persona
 Route::post('/drawings', [DrawingController::class, 'store'])->middleware('throttle:5,10');
 
-// escritura: basic auth con las credenciales del .env
 Route::middleware('admin')->group(function () {
     Route::get('/admin/check', fn () => response()->json(['message' => 'ok']));
 
+    Route::get('/admin/projects', [ProjectController::class, 'admin_index']);
+    Route::get('/admin/projects/{id}', [ProjectController::class, 'admin_show']);
     Route::post('/projects', [ProjectController::class, 'store']);
+    Route::post('/projects/{id}/files', [ProjectController::class, 'store_file']);
+    Route::post('/projects/{id}/images', [ProjectController::class, 'store_image']);
+    Route::delete('/project-files/{id}', [ProjectController::class, 'delete_file']);
     Route::delete('/projects/{id}', [ProjectController::class, 'delete']);
     Route::put('/projects/{id}', [ProjectController::class, 'update']);
 

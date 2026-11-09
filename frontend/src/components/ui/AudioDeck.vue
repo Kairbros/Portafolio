@@ -42,7 +42,6 @@ const trigger = ref<HTMLButtonElement | null>(null)
 
 const allQuiet = computed(() => muted.value && musicMuted.value)
 
-// parlante pixel: tres ondas con música, una sola con efectos, tachado sin nada
 const speaker = computed(() => {
   if (allQuiet.value) return SpeakerOffIcon
   return musicMuted.value ? SpeakerLowIcon : SpeakerOnIcon
@@ -123,7 +122,7 @@ onBeforeUnmount(() => {
     >
       <div class="dd-win__bar">{{ t('sound.title') }}</div>
 
-      <div v-if="playlist.length" class="dd-deck">
+      <div v-if="playlist.length && !musicMuted" class="dd-deck">
         <div v-if="current" class="dd-deck__now">
           <img v-if="artwork" class="dd-np__art" :src="artwork" alt="">
           <span v-else class="dd-np__art dd-scan" aria-hidden="true"></span>

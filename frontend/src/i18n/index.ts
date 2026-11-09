@@ -18,12 +18,10 @@ function readSaved(): Locale | null {
     }
 }
 
-// la primera visita usa el idioma del navegador
 function guess(): Locale {
     return navigator.language?.toLowerCase().startsWith('es') ? 'es' : 'en'
 }
 
-// el idioma que eligió el visitante; el panel de edición siempre va en español
 export const preferred = ref<Locale>(readSaved() ?? guess())
 
 export const i18n = createI18n({
@@ -38,7 +36,6 @@ export function setLocale(locale: Locale) {
     try {
         localStorage.setItem(KEY, locale)
     } catch {
-        // sin almacenamiento el idioma dura hasta recargar
     }
 }
 
@@ -50,7 +47,6 @@ export function useLocaleFor(admin: () => boolean) {
     })
 }
 
-// devuelve campo_en si el sitio está en inglés y existe; si no, el español
 export function localized(item: any, field: string): string {
     if (!item) return ''
     const english = item[`${field}_en`]

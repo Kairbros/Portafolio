@@ -15,7 +15,6 @@ class AboutRepository extends BaseRepository
         $this->model = $model;
     }
 
-    // la tabla guarda un solo texto
     function get_current()
     {
         return $this->model::query()->orderBy('id')->first();

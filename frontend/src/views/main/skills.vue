@@ -90,7 +90,6 @@ onMounted(() => track(skillStore.ensureSkills()))
     align-items: start;
 }
 
-/* todas las ventanas miden lo mismo: unas 4 filas, el resto se scrollea */
 .skills__list {
     height: 160px;
     padding: 6px 0;

@@ -77,7 +77,6 @@ async function open(drawing: Drawing) {
     viewClose.value?.focus()
 }
 
-// cierra la ventana abierta; lo dibujado se conserva si se cierra sin enviar
 function close() {
     composing.value = false
     opened.value = null
@@ -160,7 +159,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
                                 <span class="dd-field__hint">{{ t('notebook.count', { n: comment.length }) }}</span>
                             </div>
 
-                            <!-- trampa para bots: una persona no la ve -->
                             <input v-model="website" class="nb__trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
 
                             <div class="nb__send">

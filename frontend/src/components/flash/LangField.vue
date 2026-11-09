@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-// un campo con su versión en inglés; el inglés vacío muestra el español en la web
 withDefaults(defineProps<{
     id: string
     label: string
     multiline?: boolean
     rows?: number
     placeholder?: string
-    hint?: string
     error?: string
     errorEn?: string
     inputClass?: string
@@ -52,8 +50,5 @@ const tab = ref<'es' | 'en'>('es')
 
         <span v-if="error" class="dd-field__error">{{ error }}</span>
         <span v-if="errorEn" class="dd-field__error">inglés: {{ errorEn }}</span>
-        <span v-if="!error && !errorEn" class="dd-field__hint">
-            {{ tab === 'en' ? 'vacío muestra el español' : hint }}
-        </span>
     </div>
 </template>

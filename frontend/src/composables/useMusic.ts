@@ -95,7 +95,6 @@ function fadeTo(el: HTMLAudioElement, target: number, ms: number) {
         const from = el.volume
         const start = performance.now()
 
-        // rAF se congela con la pestaña en segundo plano, setInterval no
         const timer = window.setInterval(() => {
             const t = Math.min(1, (performance.now() - start) / ms)
             el.volume = Math.max(0, Math.min(1, from + (target - from) * t))

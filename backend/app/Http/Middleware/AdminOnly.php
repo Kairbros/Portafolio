@@ -4,10 +4,15 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\Response;
 
 class AdminOnly
 {
+    private const MAX_ATTEMPTS = 5;
+
+    private const LOCK_SECONDS = 900;
+
     public function handle(Request $request, Closure $next): Response
     {
         $user = (string) config('admin.user');
@@ -17,14 +22,27 @@ class AdminOnly
             return $this->reject('El servidor no tiene configurado el acceso de administrador.');
         }
 
+        $key = 'admin-login:' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
+            return $this->locked(RateLimiter::availableIn($key));
+        }
+
         [$sent_user, $sent_password] = $this->credentials($request);
 
-        // hash_equals para evitar ataques de timing
         $user_ok = hash_equals($user, $sent_user);
         $password_ok = hash_equals($password, $sent_password);
 
         if (! $user_ok || ! $password_ok) {
+            if ($sent_user !== '' || $sent_password !== '') {
+                RateLimiter::hit($key, self::LOCK_SECONDS);
+            }
+
             return $this->reject('Usuario o contraseña incorrectos.');
+        }
+
+        if (RateLimiter::attempts($key) > 0) {
+            RateLimiter::clear($key);
         }
 
         return $next($request);
@@ -32,7 +50,6 @@ class AdminOnly
 
     private function credentials(Request $request): array
     {
-        // con php-fpm no siempre llega PHP_AUTH_USER, así que se lee la cabecera
         $header = (string) $request->header('Authorization');
 
         if (str_starts_with($header, 'Basic ')) {
@@ -44,6 +61,15 @@ class AdminOnly
         }
 
         return [(string) $request->getUser(), (string) $request->getPassword()];
+    }
+
+    private function locked(int $seconds): Response
+    {
+        $minutes = max(1, (int) ceil($seconds / 60));
+
+        return response()
+            ->json(['message' => "Demasiados intentos. Prueba de nuevo en {$minutes} min."], 429)
+            ->header('Retry-After', (string) $seconds);
     }
 
     private function reject(string $message): Response

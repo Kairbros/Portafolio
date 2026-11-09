@@ -15,7 +15,6 @@ class DrawingRepository extends BaseRepository
         $this->model = $model;
     }
 
-    // todas las páginas, con sus dibujos pegados de abajo hacia arriba
     function get_pages()
     {
         return DrawingPage::query()->orderBy('id')->with('drawings')->get();

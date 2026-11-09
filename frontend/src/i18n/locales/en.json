@@ -66,28 +66,18 @@
   "projects": {
     "title": "projects",
     "types": "Project types",
-    "file": "file",
     "back": "back to {name}",
     "notFound": "this project was not found",
     "notFoundHint": "it may have been deleted or moved",
-    "screen": "Project screen",
     "data": "details",
     "type": "type",
-    "published": "published",
-    "cantView": "this file can't be opened in the browser",
-    "playBig": "play full size",
-    "viewBig": "view full size",
-    "viewBigOf": "View {name} full size",
-    "openPage": "open the page",
-    "openTab": "open in a new tab"
-  },
-  "player": {
-    "play": "play",
-    "loading": "loading",
-    "fullscreen": "fullscreen",
-    "restart": "restart",
-    "exit": "exit",
-    "close": "close"
+    "state": "status",
+    "year": "year",
+    "status": {
+      "in_progress": "in progress",
+      "finished": "finished",
+      "paused": "on hold"
+    }
   },
   "zoom": {
     "close": "close"

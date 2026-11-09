@@ -125,7 +125,7 @@ async function save() {
                     >
                     <span v-if="errors.icon" class="dd-field__error">{{ errors.icon[0] }}</span>
                     <span v-else class="dd-field__hint">
-                        {{ id ? 'vacío deja el actual; ' : '' }}svg, png, webp, jpg o gif, hasta 2 MB
+                        svg, png, webp, jpg o gif, hasta 2 MB
                     </span>
                 </div>
 

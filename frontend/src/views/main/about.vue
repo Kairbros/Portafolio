@@ -11,7 +11,6 @@ const { t } = useI18n()
 const stickerStore = useStickerStore()
 const aboutStore = useAboutStore()
 
-// posiciones fijas del collage; si hay más stickers se repiten
 const SPOTS = [
     { left: '4%', top: '3%', width: '58%', tilt: -6 },
     { left: '50%', top: '18%', width: '46%', tilt: 7 },
@@ -38,7 +37,6 @@ const stickers = computed(() =>
         .filter((s) => s.src),
 )
 
-// un párrafo por cada bloque separado por una línea vacía
 const paragraphs = computed(() =>
     localized(aboutStore, 'body')
         .split(/\n\s*\n/)

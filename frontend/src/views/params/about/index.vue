@@ -68,7 +68,6 @@ async function save() {
                     label="texto"
                     multiline
                     input-class="about-edit__text"
-                    hint="una línea vacía separa párrafos; el primero sale más claro"
                     :error="errors.body?.[0]"
                     :error-en="errors.body_en?.[0]"
                 />

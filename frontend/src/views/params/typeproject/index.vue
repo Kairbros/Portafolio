@@ -13,11 +13,6 @@ const notice = ref('')
 
 const types = computed(() => store.typeProjects ?? [])
 
-function extensionsOf(type) {
-    const list = Array.isArray(type.extension) ? type.extension : String(type.extension ?? '').split(',')
-    return list.map((e) => e.trim()).filter(Boolean).join(' ') || 'cualquier archivo'
-}
-
 async function remove() {
     if (!pending.value) return
 
@@ -52,7 +47,7 @@ onMounted(() => track(store.getTypeProjects()))
                 <li v-for="type in types" :key="type.id" class="dd-row dd-row--plain">
                     <div class="dd-row__text">
                         <span class="dd-row__name">{{ type.name }}</span>
-                        <span class="dd-row__meta">{{ extensionsOf(type) }}</span>
+                        <span class="dd-row__meta">{{ type.description }}</span>
                     </div>
 
                     <div class="dd-row__actions">

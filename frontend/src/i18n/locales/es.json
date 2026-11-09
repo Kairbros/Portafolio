@@ -66,28 +66,18 @@
   "projects": {
     "title": "proyectos",
     "types": "Tipos de proyecto",
-    "file": "archivo",
     "back": "volver a {name}",
     "notFound": "no se encontró este proyecto",
     "notFoundHint": "puede que se haya borrado o movido",
-    "screen": "Pantalla del proyecto",
     "data": "datos",
     "type": "tipo",
-    "published": "publicado",
-    "cantView": "este archivo no se puede ver desde el navegador",
-    "playBig": "jugar en grande",
-    "viewBig": "ver en grande",
-    "viewBigOf": "Ver {name} en grande",
-    "openPage": "abrir la página",
-    "openTab": "abrir en otra pestaña"
-  },
-  "player": {
-    "play": "jugar",
-    "loading": "cargando",
-    "fullscreen": "pantalla completa",
-    "restart": "reiniciar",
-    "exit": "salir",
-    "close": "cerrar"
+    "state": "estado",
+    "year": "año",
+    "status": {
+      "in_progress": "en curso",
+      "finished": "terminado",
+      "paused": "en pausa"
+    }
   },
   "zoom": {
     "close": "cerrar"

@@ -60,7 +60,6 @@ export const useDrawingStore = defineStore('drawings', {
                 return { ok: true as const }
             } catch (error) {
                 const read = readError(error)
-                // demasiados envíos seguidos
                 if (axios.isAxiosError(error) && error.response?.status === 429) {
                     return { ok: false as const, message: 'too-many', errors: read.errors }
                 }

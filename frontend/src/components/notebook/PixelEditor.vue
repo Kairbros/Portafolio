@@ -12,7 +12,6 @@ import TrashIcon from '~icons/pixelarticons/trash'
 import ZoomInIcon from '~icons/pixelarticons/zoom-in'
 import ZoomOutIcon from '~icons/pixelarticons/zoom-out'
 
-// el texto del dibujo; vacío cuando no hay nada pintado
 const model = defineModel<string>({ required: true })
 const colorsModel = defineModel<string[]>('colors', { default: () => [] })
 
@@ -166,7 +165,6 @@ function put(x: number, y: number, c: number) {
     cells[y * SIZE + x] = c
 }
 
-// línea entre dos cuadros para que el trazo no deje huecos
 function line(a: { x: number; y: number }, b: { x: number; y: number }, c: number) {
     let { x: x0, y: y0 } = a
     const dx = Math.abs(b.x - x0)
@@ -290,7 +288,6 @@ function clear() {
     commit()
 }
 
-// el formulario vacía el modelo después de enviar
 watch(model, (value) => {
     if (value === '' && !isEmpty(cells)) {
         cells = blank()

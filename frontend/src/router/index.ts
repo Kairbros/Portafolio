@@ -60,8 +60,8 @@ const routes = [
     component: projects_shell,
     children: [
       { path: '', name: 'projects_home', component: projects_type, props: true },
-      { path: ':typeId', name: 'projects_type', component: projects_type, props: true },
-      { path: ':typeId/:id', name: 'project_open', component: project_open, props: true },
+      { path: 'type/:typeId', name: 'projects_type', component: projects_type, props: true },
+      { path: ':slug', name: 'project_open', component: project_open, props: true },
     ],
   },
 
@@ -114,13 +114,10 @@ const router = createRouter({
   routes,
 })
 
-// la pantalla de carga acompaña cada cambio de ruta
 router.beforeEach(() => {
   begin()
 })
 
-// se cierra después de montar la página nueva, para que sus pedidos
-// de datos ya estén contados y la carga no se corte a la mitad
 router.afterEach(() => {
   nextTick(end)
 })

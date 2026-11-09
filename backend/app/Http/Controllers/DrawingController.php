@@ -15,16 +15,13 @@ class DrawingController extends Controller
     function __construct(protected DrawingRepository $drawing_repository)
     {}
 
-    // público: las páginas armadas
     function index()
     {
         return response()->json($this->drawing_repository->get_pages(), 200);
     }
 
-    // público: alguien deja un dibujo; queda pendiente
     function store(Request $request)
     {
-        // campo trampa: una persona no lo ve, un bot lo llena
         if ($request->filled('website')) {
             return response()->json(['message' => 'enviado'], 201);
         }
@@ -72,7 +69,6 @@ class DrawingController extends Controller
         return response()->json($this->drawing_repository->add_page(), 201);
     }
 
-    // los dibujos de la página vuelven a pendientes; siempre queda al menos una página
     function delete_page(string $id)
     {
         if (! $this->drawing_repository->delete_page($id)) {
@@ -82,7 +78,6 @@ class DrawingController extends Controller
         return response()->json(['message' => 'página borrada'], 200);
     }
 
-    // pegar, mover o girar un dibujo en una página
     function place(Request $request, string $id)
     {
         $data = $request->validate([
@@ -98,7 +93,6 @@ class DrawingController extends Controller
         return response()->json($this->drawing_repository->update_item($id, $data), 200);
     }
 
-    // vuelve a pendientes
     function unplace(string $id)
     {
         return response()->json(

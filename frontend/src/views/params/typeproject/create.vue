@@ -3,7 +3,6 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTypeProjectStore } from '@/stores/Store'
 import { track } from '@/composables/useLoader'
-import TagInput from '@/components/ui/TagInput.vue'
 import LangField from '@/components/flash/LangField.vue'
 
 const props = defineProps<{ id?: string }>()
@@ -15,17 +14,11 @@ const name = ref('')
 const description = ref('')
 const nameEn = ref('')
 const descriptionEn = ref('')
-const extensions = ref<string[]>([])
 const missing = ref(false)
 const sending = ref(false)
 const message = ref('')
 const failed = ref(false)
 const errors = ref<Record<string, string[]>>({})
-
-function normalizeExtension(raw: string) {
-    const clean = raw.trim().toLowerCase().replace(/^\.+/, '')
-    return clean ? `.${clean}` : ''
-}
 
 onMounted(async () => {
     if (!props.id) return
@@ -39,8 +32,6 @@ onMounted(async () => {
     description.value = item.description ?? ''
     nameEn.value = item.name_en ?? ''
     descriptionEn.value = item.description_en ?? ''
-    const raw = Array.isArray(item.extension) ? item.extension : String(item.extension ?? '').split(',')
-    extensions.value = raw.map(normalizeExtension).filter(Boolean)
 })
 
 async function save() {
@@ -54,7 +45,6 @@ async function save() {
         description: description.value,
         name_en: nameEn.value,
         description_en: descriptionEn.value,
-        extension: extensions.value.join(','),
     }
     const res = props.id
         ? await store.updateTypeProject(props.id, payload)
@@ -101,13 +91,6 @@ async function save() {
                     :error="errors.description?.[0]"
                     :error-en="errors.description_en?.[0]"
                 />
-
-                <div class="dd-field">
-                    <label class="dd-field__label" for="t-ext">extensiones</label>
-                    <TagInput id="t-ext" v-model="extensions" :normalize="normalizeExtension" placeholder=".zip, .png, .url" />
-                    <span v-if="errors.extension" class="dd-field__error">{{ errors.extension[0] }}</span>
-                    <span v-else class="dd-field__hint">vacío acepta cualquier archivo; .url guarda un enlace</span>
-                </div>
             </div>
 
             <div class="dd-form__foot">

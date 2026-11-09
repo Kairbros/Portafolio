@@ -16,7 +16,6 @@ export function readError(error: unknown): { message: string; errors: FieldError
     return { message: 'Ocurrió un error inesperado.', errors: {} }
 }
 
-// PHP no lee multipart en PUT: va por POST y Laravel lo trata como PUT
 function sendUpdate(url: string, params: FormData | object) {
     if (params instanceof FormData) {
         params.append('_method', 'PUT')
@@ -28,9 +27,11 @@ function sendUpdate(url: string, params: FormData | object) {
 export const useProjectStore = defineStore('projects', {
     state: () => ({
         projects: [] as any[],
+        adminProjects: [] as any[],
         project: null as any,
         opened: {} as Record<string, any>,
         loaded: false,
+        adminLoaded: false,
         error: '' as string,
     }),
 
@@ -51,25 +52,76 @@ export const useProjectStore = defineStore('projects', {
             await this.getProjects()
         },
 
-        async getProjectByID(id: string) {
+        async getAdminProjects() {
             this.error = ''
             try {
-                const res = await axios.get(`${api_url}/projects/${id}`)
-                this.project = res.data
-                this.opened[id] = res.data
+                const res = await axios.get(`${api_url}/admin/projects`)
+                this.adminProjects = res.data
+                this.adminLoaded = true
             } catch (error) {
                 this.error = readError(error).message
             }
         },
 
-        async ensureProject(id: string) {
-            const hit = this.opened[id]
+        async getProjectBySlug(slug: string) {
+            this.error = ''
+            try {
+                const res = await axios.get(`${api_url}/projects/${slug}`)
+                this.project = res.data
+                this.opened[slug] = res.data
+            } catch (error) {
+                this.error = readError(error).message
+            }
+        },
+
+        async ensureProject(slug: string) {
+            const hit = this.opened[slug]
             if (hit) {
                 this.error = ''
                 this.project = hit
                 return
             }
-            await this.getProjectByID(id)
+            await this.getProjectBySlug(slug)
+        },
+
+        async getProjectForEdit(id: string | number) {
+            try {
+                const res = await axios.get(`${api_url}/admin/projects/${id}`)
+                return { ok: true as const, data: res.data }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
+        },
+
+        async addProjectFile(id: string | number, params: FormData) {
+            try {
+                const res = await axios.post(`${api_url}/projects/${id}/files`, params)
+                this.forget()
+                return { ok: true as const, data: res.data }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
+        },
+
+        async deleteProjectFile(fileId: number) {
+            try {
+                await axios.delete(`${api_url}/project-files/${fileId}`)
+                this.forget()
+                return { ok: true as const }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
+        },
+
+        async uploadProjectImage(id: string | number, image: File) {
+            const params = new FormData()
+            params.append('image', image)
+            try {
+                const res = await axios.post(`${api_url}/projects/${id}/images`, params)
+                return { ok: true as const, path: res.data.path as string }
+            } catch (error) {
+                return { ok: false as const, ...readError(error) }
+            }
         },
 
         async storeProject(params: object) {
@@ -94,6 +146,7 @@ export const useProjectStore = defineStore('projects', {
 
         forget() {
             this.loaded = false
+            this.adminLoaded = false
             this.opened = {}
         },
 

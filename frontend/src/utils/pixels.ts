@@ -1,4 +1,3 @@
-// dibujos de la libreta: 32x32 cuadros guardados como texto, un carácter por cuadro
 export const SIZE = 32
 export const CELLS = SIZE * SIZE
 export const MAX_COLORS = 35

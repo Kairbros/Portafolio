@@ -24,7 +24,6 @@ async function enter() {
 </script>
 
 <template>
-    <!-- la key separa "nuevo" de "editar": usan el mismo formulario -->
     <RouterView v-if="isAdmin" :key="$route.fullPath" />
 
     <div v-else class="dd-gate">

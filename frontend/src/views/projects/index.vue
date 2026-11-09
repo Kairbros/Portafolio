@@ -18,11 +18,10 @@ const currentType = computed(() =>
     types.value.find((t) => String(t.id) === String(route.params.typeId)) ?? null,
 )
 
-// dentro de un proyecto la cabecera la pone la vista del proyecto
-const browsing = computed(() => !route.params.id)
+const browsing = computed(() => !route.params.slug)
 
 function fallbackToFirst() {
-    if (route.params.typeId || !types.value.length) return
+    if (route.params.typeId || route.params.slug || !types.value.length) return
     router.replace({ name: 'projects_type', params: { typeId: types.value[0].id } })
 }
 

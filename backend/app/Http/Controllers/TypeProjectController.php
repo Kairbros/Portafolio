@@ -45,7 +45,6 @@ class TypeProjectController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255|min:2',
             'description' => 'required|string|max:255',
-            'extension' => 'nullable|string|max:255',
             'name_en' => 'nullable|string|max:255',
             'description_en' => 'nullable|string|max:255',
         ], [
@@ -54,11 +53,9 @@ class TypeProjectController extends Controller
             'name.max'      => 'El nombre no puede superar los :max caracteres.',
             'description.required' => 'La descripción es obligatoria.',
             'description.max' => 'La descripción no puede superar los :max caracteres.',
-            'extension.max' => 'La extensión no puede superar los :max caracteres.',
         ], [
             'name' => 'nombre',
             'description' => 'descripción',
-            'extension' => 'extensión',
         ]);
 
         return $this->type_project_repository->save_item($data);
@@ -69,7 +66,6 @@ class TypeProjectController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255|min:2',
             'description' => 'required|string|max:255',
-            'extension' => 'nullable|string|max:255',
             'name_en' => 'nullable|string|max:255',
             'description_en' => 'nullable|string|max:255',
         ], [
@@ -78,7 +74,6 @@ class TypeProjectController extends Controller
             'name.max'      => 'El nombre no puede superar los :max caracteres.',
             'description.required' => 'La descripción es obligatoria.',
             'description.max' => 'La descripción no puede superar los :max caracteres.',
-            'extension.max' => 'La extensión no puede superar los :max caracteres.',
         ]);
 
         return response()->json([

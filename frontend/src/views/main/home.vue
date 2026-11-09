@@ -5,7 +5,6 @@ import { useProfileImgStore, useProjectStore } from '@/stores/Store'
 import { useImageRotator } from '@/composables/useImageRotator'
 import { track } from '@/composables/useLoader'
 import { fileUrl } from '@/utils/media'
-import { projectTypeId } from '@/utils/project'
 import { localized } from '@/i18n'
 import { useI18n } from 'vue-i18n'
 
@@ -74,7 +73,7 @@ onMounted(() => {
                     <li v-for="project in latest" :key="project.id">
                         <RouterLink
                             class="home__row"
-                            :to="{ name: 'project_open', params: { typeId: projectTypeId(project), id: project.id } }"
+                            :to="{ name: 'project_open', params: { slug: project.slug } }"
                         >
                             <span class="home__date">{{ shortDate(project.created_at) }}</span>
                             <span class="home__name">{{ project.name }}</span>

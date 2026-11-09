@@ -12,7 +12,7 @@ const pending = ref(null)
 const deleting = ref(false)
 const notice = ref('')
 
-const projects = computed(() => store.projects ?? [])
+const projects = computed(() => store.adminProjects ?? [])
 
 async function remove() {
     if (!pending.value) return
@@ -24,10 +24,10 @@ async function remove() {
     notice.value = res.ok ? 'borrado' : res.message
     pending.value = null
 
-    if (res.ok) await track(store.getProjects())
+    if (res.ok) await track(store.getAdminProjects())
 }
 
-onMounted(() => track(store.getProjects()))
+onMounted(() => track(store.getAdminProjects()))
 </script>
 
 <template>
@@ -51,7 +51,7 @@ onMounted(() => track(store.getProjects()))
 
                     <div class="dd-row__text">
                         <span class="dd-row__name">{{ project.name }}</span>
-                        <span class="dd-row__meta">{{ project.type?.name ?? 'sin tipo' }}</span>
+                        <span class="dd-row__meta">{{ project.type?.name ?? 'sin tipo' }}{{ project.published ? '' : ', borrador' }}</span>
                     </div>
 
                     <div class="dd-row__actions">
@@ -64,7 +64,7 @@ onMounted(() => track(store.getProjects()))
             </ul>
         </section>
 
-        <p v-else-if="store.loaded" class="dd-state">vacío</p>
+        <p v-else-if="store.adminLoaded" class="dd-state">vacío</p>
 
         <p v-if="notice" class="dd-notice" role="status">{{ notice }}</p>
 

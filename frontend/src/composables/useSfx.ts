@@ -1,9 +1,9 @@
 import { ref } from 'vue'
 
 const SOURCES = {
-    hover: '/sfx/hover.wav',   // el cursor pasa por encima de algo pulsable
-    click: '/sfx/click.wav',   // se elige
-    close: '/sfx/close.wav',   // se cierra o se cancela
+    hover: '/sfx/hover.wav',
+    click: '/sfx/click.wav',
+    close: '/sfx/close.wav',
     cassette: '/sfx/cassette.wav',
 } as const
 

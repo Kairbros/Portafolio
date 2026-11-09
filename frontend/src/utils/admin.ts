@@ -5,7 +5,6 @@ const API_URL = import.meta.env.VITE_API_URL ?? ''
 
 const KEY = 'portafolio.admin'
 
-// sessionStorage para que la credencial se borre al cerrar la pestaña
 const token = ref(sessionStorage.getItem(KEY) ?? '')
 
 export const isAdmin = computed(() => token.value !== '')
@@ -18,7 +17,6 @@ function encode(user: string, password: string): string {
 axios.interceptors.request.use((config) => {
     const method = (config.method ?? 'get').toLowerCase()
 
-    // las lecturas públicas van sin credencial; las de /admin/ la necesitan
     const privateRead = String(config.url ?? '').includes('/admin/')
 
     if (token.value && (privateRead || (method !== 'get' && method !== 'head'))) {

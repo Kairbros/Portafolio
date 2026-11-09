@@ -4,52 +4,39 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class Project extends Model
 {
     protected $table = 'projects';
 
+    protected $casts = [
+        'tags' => 'array',
+        'published' => 'boolean',
+        'year' => 'integer',
+    ];
+
     public function type(): BelongsTo
     {
         return $this->belongsTo(TypeProject::class, 'type_project_id');
     }
 
+    public function links(): HasMany
+    {
+        return $this->hasMany(ProjectLink::class)->orderBy('position');
+    }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(ProjectFile::class)->orderBy('id');
+    }
+
     protected static function booted(): void
     {
         static::deleting(function (Project $project) {
-            $project->discard_files();
+            Storage::disk('public')->deleteDirectory('projects/' . $project->id);
+            Storage::disk('local')->deleteDirectory('project-files/' . $project->id);
         });
-    }
-
-    private function discard_files(): void
-    {
-        $disk = Storage::disk('public');
-
-        $folder = $this->project_root();
-
-        if ($folder) {
-            if ($disk->directoryExists($folder)) $disk->deleteDirectory($folder);
-            else $disk->delete($folder);
-        }
-
-        if ($this->cover && $this->cover !== $this->folder) {
-            $disk->delete($this->cover);
-        }
-    }
-
-    private function project_root(): ?string
-    {
-        $folder = (string) $this->folder;
-
-        if ($folder === '' || str_starts_with($folder, 'http')) {
-            return null;
-        }
-
-        $parts = explode('/', trim($folder, '/'));
-
-        return count($parts) >= 3
-            ? implode('/', array_slice($parts, 0, 3))
-            : null;
     }
 }

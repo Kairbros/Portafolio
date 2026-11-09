@@ -140,7 +140,7 @@ async function save() {
                     <label class="dd-field__label" for="mt-audio">audio</label>
                     <input id="mt-audio" type="file" accept="audio/mpeg,audio/wav,.mp3,.wav" class="dd-input" @change="onMusicChange">
                     <span v-if="errors.music" class="dd-field__error">{{ errors.music[0] }}</span>
-                    <span v-else class="dd-field__hint">{{ id ? 'vacío deja el actual; ' : '' }}mp3 o wav, hasta 125 MB</span>
+                    <span v-else class="dd-field__hint">mp3 o wav, hasta 125 MB</span>
                 </div>
 
                 <div class="dd-field">
@@ -150,7 +150,7 @@ async function save() {
                     <span v-else-if="!isSquare" class="dd-field__error">
                         tiene que ser cuadrada, esta es de {{ size.width }} por {{ size.height }}
                     </span>
-                    <span v-else class="dd-field__hint">{{ id ? 'vacío deja la actual; ' : '' }}cuadrada; jpg, png o gif, hasta 32 MB</span>
+                    <span v-else class="dd-field__hint">cuadrada; jpg, png o gif, hasta 32 MB</span>
                 </div>
             </div>
 

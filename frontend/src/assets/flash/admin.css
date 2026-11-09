@@ -1,5 +1,3 @@
-/* Dream Diary: fondo y piezas del panel de edición */
-
 /* ---------- Fondo que cambia detrás del escenario ---------- */
 
 .backdrop {
@@ -223,6 +221,96 @@
   color: var(--dd-closed);
 }
 
+.dd-form__aside {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.dd-form__pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dd-md__tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dd-md__image {
+  position: relative;
+  cursor: pointer;
+}
+
+.dd-md__image:focus-within {
+  outline: 2px solid var(--dd-bone);
+  outline-offset: 1px;
+}
+
+.dd-md__file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.dd-md__area {
+  min-height: 280px;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.dd-md__preview {
+  min-height: 280px;
+  background: var(--dd-well);
+  border: 1px solid var(--dd-line);
+}
+
+.dd-links__group {
+  display: grid;
+  gap: 4px;
+}
+
+.dd-links__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.dd-links__row--publish {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.dd-links__add {
+  justify-self: start;
+}
+
+.dd-files__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.dd-files__add {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--dd-line);
+}
+
+@media (max-width: 520px) {
+  .dd-links__row:not(.dd-links__row--publish) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .dd-form__preview {
   display: grid;
   gap: 10px;
@@ -273,7 +361,6 @@
   background: var(--dd-hover);
 }
 
-/* inglés sin escribir: más apagado */
 .dd-langtabs__btn--empty:not([aria-pressed='true']) {
   opacity: 0.55;
 }

@@ -1,5 +1,3 @@
-/* Dream Diary: piezas del escenario */
-
 /* ---------- Escenario ---------- */
 
 .dd-shell {
@@ -23,7 +21,6 @@
   transition: opacity 320ms ease;
 }
 
-/* sin el mouse encima se aclara para dejar ver el fondo */
 .dd-stage:hover,
 .dd-stage:focus-within {
   opacity: 1;
@@ -139,7 +136,6 @@
   padding: 24px 28px;
 }
 
-/* enlaces de afuera, al pie de la columna: chicos y grises para no competir con las secciones */
 .dd-nav__out {
   display: flex;
   flex-direction: column;
@@ -172,7 +168,6 @@
   color: var(--dd-bone);
 }
 
-/* lápiz solo, con área de toque cómoda */
 /* ---------- Ventanas ---------- */
 
 .dd-win {
@@ -281,15 +276,6 @@
 .dd-btn--tone {
   color: var(--dd-tone);
   border-color: var(--dd-tone);
-}
-
-.dd-btn--big {
-  min-height: 40px;
-  padding: 0 32px;
-  font-size: 16px;
-  color: var(--dd-bone);
-  background: var(--dd-stage);
-  border-color: var(--dd-bone);
 }
 
 .dd-tabs {
@@ -769,71 +755,120 @@
   object-fit: contain;
 }
 
-.dd-modal__board {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: calc(100dvh - 90px);
-  background: #000;
+/* ---------- Artículos ---------- */
+
+.dd-prose {
+  padding: 18px 20px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--dd-bone);
+  overflow-wrap: anywhere;
 }
 
-/* ---------- Reproductor de juegos ---------- */
-
-.dd-player {
-  display: grid;
-  gap: 8px;
+.dd-prose > * + * {
+  margin-top: 1em;
 }
 
-.dd-player__screen {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-}
-
-.dd-player__poster,
-.dd-player__frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.dd-player__poster {
-  object-fit: cover;
-  opacity: 0.55;
-}
-
-.dd-player__frame {
-  border: 0;
-  background: #000;
-}
-
-.dd-player__cover {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 12px;
-}
-
-.dd-player__booting {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
+.dd-prose h1,
+.dd-prose h2,
+.dd-prose h3,
+.dd-prose h4 {
+  margin-top: 1.6em;
   font-family: var(--dd-pixel);
-  font-size: 12px;
-  color: var(--dd-dust);
-  pointer-events: none;
+  line-height: 1.3;
+  color: var(--dd-tone);
 }
 
-.dd-player__hud {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
-  padding: 0 8px 8px;
+.dd-prose > :first-child {
+  margin-top: 0;
+}
+
+.dd-prose h1 {
+  font-size: 20px;
+}
+
+.dd-prose h2 {
+  font-size: 18px;
+}
+
+.dd-prose h3 {
+  font-size: 15px;
+}
+
+.dd-prose h4 {
+  font-size: 13px;
+}
+
+.dd-prose p,
+.dd-prose li,
+.dd-prose blockquote {
+  max-width: 68ch;
+}
+
+.dd-prose ul,
+.dd-prose ol {
+  padding-left: 1.4em;
+}
+
+.dd-prose ul {
+  list-style: square;
+}
+
+.dd-prose ol {
+  list-style: decimal;
+}
+
+.dd-prose a {
+  color: var(--dd-tone);
+  text-decoration: underline;
+}
+
+.dd-prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--dd-frame);
+}
+
+.dd-prose blockquote {
+  padding-left: 12px;
+  color: var(--dd-lilac);
+  border-left: 2px solid var(--dd-frame);
+}
+
+.dd-prose code {
+  padding: 1px 4px;
+  font-size: 0.92em;
+  background: var(--dd-well);
+}
+
+.dd-prose pre {
+  padding: 12px;
+  overflow-x: auto;
+  background: var(--dd-well);
+  border: 1px solid var(--dd-line);
+}
+
+.dd-prose pre code {
+  padding: 0;
+  background: none;
+}
+
+.dd-prose hr {
+  border: 0;
+  border-top: 1px dashed var(--dd-line);
+}
+
+.dd-prose table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.dd-prose th,
+.dd-prose td {
+  padding: 4px 8px;
+  border: 1px solid var(--dd-line);
 }
 
 /* ---------- Pantallas chicas ---------- */

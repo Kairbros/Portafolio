@@ -21,12 +21,6 @@ const projects = computed(() =>
     ),
 )
 
-const extension = computed(() => {
-    const raw = props.type?.extension
-    const first = String(raw ?? '').split(',')[0]
-    return first.trim().replace(/^\./, '').toLowerCase()
-})
-
 onMounted(() => track(projectStore.ensureProjects()))
 </script>
 
@@ -41,7 +35,7 @@ onMounted(() => track(projectStore.ensureProjects()))
 
         <ul v-else-if="projects.length" class="dd-grid">
             <li v-for="project in projects" :key="project.id">
-                <RouterLink class="dd-card" :to="{ name: 'project_open', params: { typeId, id: project.id } }">
+                <RouterLink class="dd-card" :to="{ name: 'project_open', params: { slug: project.slug } }">
                     <span class="dd-card__shot dd-scan">
                         <img
                             v-if="coverUrl(project)"
@@ -50,7 +44,6 @@ onMounted(() => track(projectStore.ensureProjects()))
                             alt=""
                             loading="lazy"
                         >
-                        <span v-else>{{ extension || t('projects.file') }}</span>
                     </span>
                     <span class="dd-card__name">{{ project.name }}</span>
                 </RouterLink>

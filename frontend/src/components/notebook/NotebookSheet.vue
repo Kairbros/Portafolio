@@ -42,7 +42,6 @@ function cardSize(card: HTMLElement) {
 const emit = defineEmits<{
     open: [drawing: Drawing]
     select: [drawing: Drawing]
-    // al soltar una tarjeta movida o girada
     commit: [drawing: Drawing]
 }>()
 
@@ -83,7 +82,6 @@ function startDrag(e: PointerEvent, d: Drawing) {
     const card = e.currentTarget as HTMLElement
     const sheet = card.parentElement!.getBoundingClientRect()
     const z = d.z
-    // tocar una tarjeta la sube al frente
     if (props.drawings.some((other) => other !== d && other.z >= d.z)) d.z = topZ() + 1
     emit('select', d)
     drag = { d, px: e.clientX, py: e.clientY, x: d.x, y: d.y, z, w: sheet.width, h: sheet.height, size: cardSize(card) }
@@ -121,7 +119,6 @@ function endDrag() {
     if (!drag) return
     const { d, x, y, z } = drag
     drag = null
-    // un clic sin mover no guarda nada
     if (d.x !== x || d.y !== y || d.z !== z) emit('commit', d)
 }
 
@@ -142,7 +139,6 @@ function startSpin(e: PointerEvent, d: Drawing) {
 function moveSpin(e: PointerEvent) {
     if (!spin) return
     let rotation = spin.rotation + angleOf(e, spin.cx, spin.cy) - spin.angle
-    // con shift salta de 15 en 15
     rotation = e.shiftKey ? Math.round(rotation / 15) * 15 : Math.round(rotation)
     const straight = Math.round(rotation / 45) * 45
     if (props.snap && !e.altKey && Math.abs(rotation - straight) <= 3) rotation = straight

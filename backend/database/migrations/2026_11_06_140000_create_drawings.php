@@ -14,18 +14,14 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // la libreta arranca con una página
         DB::table('drawing_pages')->insert(['created_at' => now(), 'updated_at' => now()]);
 
         Schema::create('drawings', function (Blueprint $table) {
             $table->id();
             $table->string('name', 24)->nullable();
             $table->string('comment', 140)->nullable();
-            // 32x32 cuadros, un carácter por cuadro: 0 vacío, 1-9 y a-c los colores
             $table->string('pixels', 1024);
-            // sin página = pendiente
             $table->foreignId('drawing_page_id')->nullable()->constrained('drawing_pages')->nullOnDelete();
-            // posición en porcentaje de la página
             $table->decimal('x', 6, 2)->default(0);
             $table->decimal('y', 6, 2)->default(0);
             $table->decimal('rotation', 6, 2)->default(0);
