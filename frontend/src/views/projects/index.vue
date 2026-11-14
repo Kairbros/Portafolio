@@ -30,7 +30,7 @@ onMounted(async () => {
     fallbackToFirst()
 })
 
-watch(() => route.params.typeId, fallbackToFirst)
+watch(() => [route.params.typeId, route.params.slug], fallbackToFirst)
 </script>
 
 <template>

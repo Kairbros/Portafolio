@@ -799,12 +799,6 @@
   font-size: 13px;
 }
 
-.dd-prose p,
-.dd-prose li,
-.dd-prose blockquote {
-  max-width: 68ch;
-}
-
 .dd-prose ul,
 .dd-prose ol {
   padding-left: 1.4em;
